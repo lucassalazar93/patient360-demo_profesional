@@ -1,0 +1,17 @@
+{
+  "name": "Patient 360 Profesional",
+  "short_name": "Patient 360",
+  "description": "Agenda, pacientes, pendientes y equipo del profesional en un solo lugar. Versión de demostración con datos ficticios.",
+  "lang": "es",
+  "start_url": "./#profesional",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5f8f7",
+  "theme_color": "#112f36",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

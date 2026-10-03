@@ -1,0 +1,103 @@
+/* Flujo diario del espacio profesional: movimiento suave, ficha compacta, filas con una acción clara, calendario
+   táctil, buscador rápido y formularios como hoja inferior en celular. Usa solo la paleta y los componentes existentes.
+   Los formularios se dibujan en #modalRoot, fuera de #professionalApp: por eso sus reglas usan los colores directos. */
+
+@keyframes pFlowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes pSheetIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+#professionalApp .ux-enter { animation: pFlowIn .28s cubic-bezier(.2, .7, .2, 1) both; }
+#professionalApp .p-btn { transition: background .15s, transform .12s, box-shadow .15s; }
+#professionalApp .p-btn:active { transform: scale(.98); }
+#professionalApp .p-btn.primary:hover { box-shadow: 0 6px 18px #173c4422; }
+.p-modal { animation: pSheetIn .22s cubic-bezier(.2, .7, .2, 1) both; }
+
+/* Cita en atención: acento dorado, sin cambiar la paleta */
+#professionalApp .ux-appt.is-2 { border-left-color: var(--gold); }
+
+/* Ficha: una sola franja con contexto y vuelta */
+.ux-patient-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.ux-patient-top .p-kicker { margin: 0; }
+#professionalApp .p-patient-head .p-actions .p-btn { white-space: nowrap; }
+
+/* Buscador en la barra superior */
+#professionalApp .ux-find-btn { justify-content: flex-start; min-width: 230px; color: var(--muted); font-weight: 600 !important; }
+.ux-find-btn kbd { margin-left: auto; font: inherit; font-size: 11px; border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
+
+/* Buscador rápido */
+.p-modal.ux-find { width: min(580px, 100%); }
+.p-modal.ux-find .p-card-head { margin-bottom: 12px; }
+.p-modal.ux-find .p-error { display: none; }
+.ux-find #uxFind { min-height: 50px; font-size: 16px; border-radius: 12px; }
+.ux-find-list { margin-top: 6px; max-height: 54dvh; overflow-y: auto; overscroll-behavior: contain; }
+.ux-find-group { margin: 16px 0 4px; }
+.ux-find-item { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; border: 0; background: none; padding: 10px; border-radius: 10px; min-height: 54px; color: #173c44; font: inherit; cursor: pointer; transition: background .12s; }
+.ux-find-item:hover, .ux-find-item:focus-visible { background: #edf4f2; }
+.ux-find-item:focus-visible { outline: 3px solid #c89962; outline-offset: -3px; }
+.ux-find-item span { min-width: 0; }
+.ux-find-item strong { display: block; font-size: 15px; }
+.ux-find-item small { display: block; font-size: 13px; color: #657e83; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ux-find-item .p-tag { flex: none; }
+
+/* Calendario: franja de días con toque directo, pensada para el pulgar */
+.ux-cal { padding: 16px 18px; }
+.ux-cal-bar { display: flex; align-items: center; gap: 10px; }
+.ux-cal-title { flex: 1; min-width: 0; text-align: center; }
+.ux-cal-title strong { display: block; font-size: 16px; }
+.ux-cal-title span { font-size: 12px; color: var(--muted); }
+#professionalApp .ux-icon { min-width: 44px; min-height: 44px; padding: 0; font-size: 22px !important; line-height: 1; }
+.ux-strip { display: flex; gap: 8px; overflow-x: auto; padding: 14px 2px 6px; scroll-snap-type: x proximity; scrollbar-width: none; }
+.ux-strip::-webkit-scrollbar { display: none; }
+.ux-day { flex: 1 0 66px; scroll-snap-align: center; display: flex; flex-direction: column; align-items: center; gap: 3px; border: 1px solid var(--line); background: #fff; border-radius: 14px; padding: 10px 4px; min-height: 80px; color: #173c44; cursor: pointer; transition: background .15s, color .15s, border-color .15s, transform .12s; }
+.ux-day:hover { border-color: #b9cbc8; }
+.ux-day:active { transform: scale(.97); }
+.ux-day span { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; font-weight: 700; color: var(--muted); }
+.ux-day b { font-size: 20px; line-height: 1.1; }
+.ux-day small { font-size: 10px !important; font-weight: 700; color: var(--muted); }
+.ux-day.active { background: #173c44; border-color: #173c44; color: #fff; }
+.ux-day.active span, .ux-day.active small { color: #fff; opacity: .8; }
+.ux-cal-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+.ux-cal-tools .ux-cal-date { flex: 1 1 160px; min-width: 0; }
+.ux-cal-tools .ux-cal-date .p-input { width: 100%; min-height: 44px; }
+.ux-cal-tools .p-btn { min-height: 44px; }
+.ux-wide-only { display: flex; gap: 8px; }
+/* La semana completa en una sola fila: siete días */
+#professionalApp .p-week { grid-template-columns: repeat(7, minmax(140px, 1fr)); }
+
+@media (max-width: 1150px) {
+  .ux-find-btn kbd { display: none; }
+  #professionalApp .ux-find-btn { min-width: 150px; }
+  /* Barra superior en tablet: la fecha ya está en el encabezado de la página; el título queda en una línea */
+  #professionalApp .p-top .p-desktop-only { display: none; }
+  #professionalApp .p-top-title { min-width: 0; }
+  #professionalApp .p-top-title strong, #professionalApp .p-top-title span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #professionalApp .p-head { flex-wrap: wrap; }
+  #professionalApp .p-head .p-actions { flex-wrap: nowrap; }
+}
+
+@media (max-width: 700px) {
+  /* Buscador: solo ícono en la barra y panel anclado arriba, para que el teclado no lo tape */
+  .ux-find-btn span { display: none; }
+  #professionalApp .ux-find-btn { min-width: 42px; justify-content: center; }
+  .p-modal-back.ux-find-back { place-items: start stretch; padding: 0; }
+  .p-modal-back.ux-find-back .p-modal { border-radius: 0 0 20px 20px; padding: 14px 16px 18px; max-height: 88dvh; }
+  .ux-find-list { max-height: calc(88dvh - 150px); }
+
+  /* Formularios como hoja inferior, más fáciles de usar con el pulgar */
+  .p-modal-back:not(.ux-find-back) { place-items: end stretch; padding: 0; }
+  .p-modal-back:not(.ux-find-back) .p-modal { width: 100%; max-height: 90dvh; border-radius: 20px 20px 0 0; padding: 12px 20px calc(22px + env(safe-area-inset-bottom)); }
+  .p-modal-back:not(.ux-find-back) .p-modal::before { content: ''; display: block; width: 42px; height: 5px; border-radius: 5px; background: #dfe8e7; margin: 0 auto 14px; }
+  .p-modal .p-actions .p-btn { flex: 1; min-height: 48px; }
+
+  /* Las notificaciones aparecen por encima de la barra inferior */
+  body.professional-mode .toast { left: 12px; right: 12px; bottom: 86px; text-align: center; }
+
+  .ux-patient-top { margin-bottom: 14px; }
+  .ux-wide-only { display: none; }
+  .ux-cal { padding: 14px 12px; }
+  .ux-day { flex-basis: 58px; min-height: 76px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #professionalApp .ux-enter, .p-modal { animation: none; }
+  #professionalApp .p-btn, .ux-day, .ux-find-item { transition: none; }
+}
