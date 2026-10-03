@@ -1,23 +1,23 @@
-/* Datos de demostración: al aparecer un formulario, rellena sus campos vacíos con datos ficticios
+/* Datos de ejemplo: al aparecer un formulario, rellena sus campos vacíos con valores realistas
    para recorrer el flujo sin escribir. Cada campo se rellena una sola vez y nunca sobrescribe lo que el usuario escribe. */
 (() => {
   const DATE = '2026-10-05'; // fecha de referencia del demo, la misma que usa el espacio profesional
   const BASE = {
-    name:'Camila Herrera', phone:'300 000 0199', email:'camila.demo@example.com', age:'32',
-    title:'Valoración de control', reason:'Revisión de prueba', result:'Se confirmó la próxima cita',
-    condition:'Caries en seguimiento', other:'Registro de prueba', note:'Detalle de prueba',
-    label:'Radiografía de prueba', location:'Consultorio 1', next:'Revisar el plan y confirmar la siguiente fase',
+    name:'Camila Herrera', phone:'300 000 0199', email:'camila.herrera@example.com', age:'32',
+    title:'Valoración de control', reason:'Revisión de casos clínicos', result:'Se confirmó la próxima cita',
+    condition:'Caries en seguimiento', other:'Hallazgo en seguimiento', note:'Controlar en la próxima visita',
+    label:'Fotografía de control', location:'Consultorio 1', next:'Revisar el plan y confirmar la siguiente fase',
     notes:'Llamar antes de confirmar la cita', preferred:'Mañana, 9:00 a.m.', language:'Español',
     schedule:'Lunes a viernes, 8:00 a.m. – 12:00 m.', comfort:'Música suave y agua tibia',
     privacy:'Atención privada, sin acompañantes', logistics:'Acceso por parqueadero interno',
-    code:'DEMO-001', zone:'Medellín · El Poblado', residence:'Medellín', placement:'Instagram Reels',
-    originCampaign:'Campaña demo Instagram', domain:'demo.patient360.test',
+    code:'REF-001', zone:'Medellín · El Poblado', residence:'Medellín', placement:'Instagram Reels',
+    originCampaign:'Sonrisa consciente', domain:'app.miclinica.com',
     amount:'500000', price:'500000', agreedPrice:'450000', buffer:'15', duration:'60',
     date:DATE, time:'10:00', end:'11:00'
   };
   // Mensajes por campo concreto (id del control) y por tipo de formulario (data-kind de la ventana de cita)
   const BY_ID = {
-    pNoteText:'Evolución de prueba: hallazgos y plan acordados con la paciente.',
+    pNoteText:'Paciente asiste a control sin dolor ni sensibilidad. Se revisa el avance del tratamiento, se dan indicaciones de higiene y se acuerda la siguiente fase.',
     jChatText:'Hola, ¿me confirman el horario de mañana?',
     pChatText:'Recibido. Confirmamos la cita con la paciente.',
     uChatText:'Confirmo mi cita de mañana. ¿Me pueden recordar la hora?',
@@ -43,8 +43,8 @@
     const kind = form.dataset.kind || '';
     if (BY_ID[el.id]) return BY_ID[el.id];
     if (BY_KIND[kind]?.[el.name]) return BY_KIND[kind][el.name];
-    if (el.name === 'text') return form.querySelector('[name="visit"]') ? BY_ID.pNoteText : 'Mensaje de prueba.';
-    return BASE[el.name] ?? 'Dato de prueba';
+    if (el.name === 'text') return form.querySelector('[name="visit"]') ? BY_ID.pNoteText : 'Gracias, quedo atento.';
+    return BASE[el.name] ?? 'Por definir';
   }
 
   async function demoImage() {
@@ -55,10 +55,10 @@
     const grad = g.createLinearGradient(0, 0, 640, 420);
     grad.addColorStop(0, '#173c44'); grad.addColorStop(1, '#d4ae80');
     g.fillStyle = grad; g.fillRect(0, 0, 640, 420);
-    g.fillStyle = '#ffffff'; g.font = 'bold 34px sans-serif'; g.fillText('Imagen de prueba', 40, 80);
-    g.font = '22px sans-serif'; g.fillText('Patient 360 · demo', 40, 120);
+    g.fillStyle = '#ffffff'; g.font = 'bold 34px sans-serif'; g.fillText('Fotografía de control', 40, 80);
+    g.font = '22px sans-serif'; g.fillText('Patient 360', 40, 120);
     const blob = await new Promise(r => c.toBlob(r, 'image/png'));
-    demoFile = new File([blob], 'imagen-demo.png', { type: 'image/png' });
+    demoFile = new File([blob], 'fotografia-control.png', { type: 'image/png' });
     return demoFile;
   }
 

@@ -1,6 +1,6 @@
-/* Flujo diario del espacio profesional: movimiento suave, ficha compacta, filas con una acción clara, calendario
-   táctil, buscador rápido y formularios como hoja inferior en celular. Usa solo la paleta y los componentes existentes.
-   Los formularios se dibujan en #modalRoot, fuera de #professionalApp: por eso sus reglas usan los colores directos. */
+/* Espacio profesional como herramienta personal: movimiento suave, ficha compacta, una acción clara por cita,
+   calendario táctil, buscador rápido y formularios como hoja inferior en celular. Usa solo la paleta y los componentes
+   existentes. Los formularios se dibujan en #modalRoot, fuera de #professionalApp: sus reglas usan los colores directos. */
 
 @keyframes pFlowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes pSheetIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
@@ -17,7 +17,9 @@
 /* Ficha: una sola franja con contexto y vuelta */
 .ux-patient-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .ux-patient-top .p-kicker { margin: 0; }
-#professionalApp .p-patient-head .p-actions .p-btn { white-space: nowrap; }
+/* Nota de recepción: contexto de lectura junto a la cita */
+#professionalApp .ux-reception { margin: 0; padding: 12px 14px; border-radius: 10px; background: #f8fbfa; border-left: 3px solid #b9d6cc; font-size: 14px; }
+.ux-reception strong { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
 
 /* Buscador en la barra superior */
 #professionalApp .ux-find-btn { justify-content: flex-start; min-width: 230px; color: var(--muted); font-weight: 600 !important; }
@@ -100,4 +102,60 @@
 @media (prefers-reduced-motion: reduce) {
   #professionalApp .ux-enter, .p-modal { animation: none; }
   #professionalApp .p-btn, .ux-day, .ux-find-item { transition: none; }
+}
+
+/* Aviso de próxima cita: tarjeta que aparece sola, como un aviso del teléfono. Vive fuera de #professionalApp */
+@keyframes pPushIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: none; } }
+#uxPush { position: fixed; top: 92px; right: 18px; width: min(390px, calc(100% - 28px)); z-index: 70; color: #173c44; }
+body:not(.professional-mode) #uxPush { display: none; }
+.ux-push { display: flex; gap: 12px; align-items: flex-start; background: #fff; border: 1px solid #dfe8e7; border-radius: 16px; padding: 14px; box-shadow: 0 18px 40px #132b3240; animation: pPushIn .28s cubic-bezier(.2, .7, .2, 1) both; }
+.ux-push-icon { flex: none; width: 40px; height: 40px; border-radius: 12px; background: #112f36; color: #d4ae80; display: grid; place-items: center; }
+.ux-push-icon svg { width: 24px; height: 24px; }
+.ux-push-body { flex: 1; min-width: 0; }
+.ux-push-body small { display: block; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; font-weight: 800; color: #926b40; }
+.ux-push-body strong { display: block; font-size: 16px; line-height: 1.3; margin-top: 2px; }
+.ux-push-body span { display: block; font-size: 13px; color: #657e83; margin-top: 2px; }
+.ux-push-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.ux-push-actions .p-btn { min-height: 40px; padding: 8px 14px; }
+.ux-push-x { flex: none; width: 32px; height: 32px; border: 0; background: none; color: #657e83; font-size: 22px; line-height: 1; border-radius: 8px; cursor: pointer; }
+.ux-push-x:hover { background: #edf4f2; }
+.ux-device { border-bottom: 0; flex-wrap: wrap; }
+
+@media (max-width: 700px) {
+  #uxPush { top: 8px; right: 8px; left: 8px; width: auto; }
+  .ux-push-actions .p-btn { flex: 1; }
+  .ux-device .p-actions { width: 100%; }
+  .ux-device .p-actions .p-btn { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .ux-push { animation: none; } }
+
+/* Ficha del paciente: alertas siempre visibles y resumen por secciones */
+.ux-alerts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.ux-alerts .p-tag { font-size: 13px !important; padding: 5px 10px; }
+.ux-index { display: none; }
+.ux-summary .p-card { scroll-margin-top: 96px; }
+.ux-facts { margin: 0; }
+.ux-facts > div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 4px 16px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.ux-facts > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.ux-facts dt { font-size: 13px; color: var(--muted); }
+.ux-facts dd { margin: 0; font-size: 15px; font-weight: 600; }
+.ux-facts dd.alert { color: #a34854; }
+#professionalApp .ux-sub { margin: 22px 0 8px; padding-top: 18px; border-top: 1px solid var(--line); }
+.ux-more { margin-top: 12px; }
+.ux-note-add { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 6px; }
+.ux-note-add textarea { flex: 1; min-width: 0; font: inherit; font-size: 15px; padding: 10px 12px; border: 1px solid #cbdcda; border-radius: 10px; color: #274d52; background: #fff; resize: vertical; }
+.ux-note-item { padding: 13px 0; border-bottom: 1px solid var(--line); }
+.ux-note-item:last-of-type { border-bottom: 0; }
+#professionalApp .ux-note-item p { margin: 0 0 4px; font-size: 15px; }
+.ux-note-item small { color: var(--muted); }
+.ux-doc { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 15px; font-weight: 600; }
+.ux-doc small { color: var(--muted); font-weight: 400; white-space: nowrap; }
+
+@media (max-width: 700px) {
+  /* Índice del resumen: salta a cada sección sin recorrer toda la ficha */
+  .ux-index { display: flex; gap: 6px; overflow-x: auto; margin: 0 -16px 14px; padding: 0 16px 4px; scrollbar-width: none; }
+  .ux-index::-webkit-scrollbar { display: none; }
+  #professionalApp .ux-index .p-btn { flex: none; min-height: 38px; padding: 6px 12px; border-color: var(--line); background: #fff; }
+  .ux-facts > div { grid-template-columns: 116px minmax(0, 1fr); }
+  .ux-note-add { flex-direction: column; align-items: stretch; }
 }

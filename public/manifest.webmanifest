@@ -1,7 +1,7 @@
 {
   "name": "Patient 360 Profesional",
   "short_name": "Patient 360",
-  "description": "Agenda, pacientes, pendientes y equipo del profesional en un solo lugar. Versión de demostración con datos ficticios.",
+  "description": "Agenda, pacientes, pendientes y equipo del profesional en un solo lugar.",
   "lang": "es",
   "start_url": "./#profesional",
   "scope": "./",
