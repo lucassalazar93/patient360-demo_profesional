@@ -1,0 +1,42 @@
+/* Navegación por dispositivo: barra inferior en celular, acceso directo en tablet y computador.
+   Reutiliza la paleta y los componentes existentes; solo ordena la navegación. */
+
+/* Menú lateral: el ícono de hamburguesa no tenía trazo y se veía vacío */
+.mobile-menu svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.sidebar{overflow-y:auto}
+
+/* Acceso al espacio profesional desde la barra superior (tablet y computador) */
+.c-pro-link{display:none}
+.c-tabbar,.c-scrim{display:none}
+.c-tabbar em,.p-tab-count{position:absolute;top:2px;left:calc(50% + 9px);min-width:17px;height:17px;border-radius:9px;background:#b3573e;color:#fff;font-style:normal;font-size:10px;line-height:17px;text-align:center;padding:0 4px;font-weight:800}
+
+@media(min-width:761px){
+  .c-pro-link{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;text-decoration:none;min-height:37px;padding:0 13px;font-size:12px}
+  .c-pro-link svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .c-pro-link svg.c-tooth{stroke-width:4.5}
+}
+@media(min-width:761px) and (max-width:1170px){
+  .c-pro-link span{display:none}
+  .c-pro-link{width:37px;padding:0;justify-content:center}
+  .crumb{display:none}
+}
+
+/* Barra inferior del espacio central (celular) */
+@media(max-width:760px){
+  body:not(.professional-mode) .c-tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;justify-content:space-around;gap:2px;background:#fff;border-top:1px solid #dce7e4;padding:7px 4px max(9px,env(safe-area-inset-bottom));z-index:30;box-shadow:0 -8px 24px #102e3614}
+  body:not(.professional-mode) .c-tabbar button{position:relative;flex:1;max-width:98px;min-width:0;border:0;background:#fff;color:#78908e;display:flex;align-items:center;flex-direction:column;justify-content:center;gap:4px;min-height:52px;font-size:11px;font-weight:650;border-radius:9px;padding:4px 2px;transition:background .18s,color .18s}
+  body:not(.professional-mode) .c-tabbar button svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  body:not(.professional-mode) .c-tabbar button svg.c-tooth{stroke-width:3.6}
+  body:not(.professional-mode) .c-tabbar button.active{color:#173c44;background:#eaf2ee;font-weight:800}
+  body:not(.professional-mode) .c-tabbar button[aria-expanded="true"]{color:#173c44}
+  body:not(.professional-mode) .workspace{padding-bottom:112px}
+  body:not(.professional-mode) .toast{left:14px;right:14px;bottom:92px;text-align:center}
+  .sidebar:not(.open){box-shadow:none;visibility:hidden}
+  body.c-menu-open{overflow:hidden}
+  body.c-menu-open .c-tabbar{display:none}
+  body.c-menu-open .c-scrim{display:block;position:fixed;inset:0;background:#102d36a6;z-index:4}
+}
+
+/* Espacio profesional: la barra ya existía; aquí solo se completa el contador y el foco */
+.p-mobile-nav button{position:relative}
+.p-mobile-nav button[aria-current="page"]{color:#173c44}
