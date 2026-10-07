@@ -1,0 +1,176 @@
+/* Capa de calma: aire, superficies suaves y una sola nota oscura por pantalla. Misma paleta (teal, arena, menta) y mismas
+   fuentes; cambia el reparto: el fondo y el marco pasan a claro y el teal profundo queda para lo que pide atención.
+   Se carga al final y solo ajusta presentación. Para volver al aspecto anterior basta quitar este archivo de index.html. */
+:root {
+  --c-ink: #173c44; --c-ink-hover: #1e4a53; --c-muted: #5b757a; --c-icon: #86a0a3;
+  --c-sand: #d5b185; --c-sand-deep: #a5784d; --c-sand-soft: #fbf3e7;
+  --c-mint: #e6f1ee; --c-mint-soft: #f1f7f5; --c-sage: #2f7d70;
+  --c-canvas: #f4f8f7; --c-surface: #fff;
+  --c-line: rgba(23, 60, 68, .08); --c-line-strong: rgba(23, 60, 68, .15);
+  --c-shadow: 0 1px 2px rgba(23, 60, 68, .04), 0 12px 32px -16px rgba(23, 60, 68, .16);
+  --c-shadow-lift: 0 2px 6px rgba(23, 60, 68, .05), 0 28px 56px -24px rgba(23, 60, 68, .26);
+  --c-r-md: 12px; --c-r-lg: 20px; --c-r-xl: 26px;
+  background: var(--c-canvas); -webkit-font-smoothing: antialiased; scrollbar-color: #c5d6d3 transparent;
+}
+/* Fondo: bruma de menta y un rastro de arena arriba, quieta al desplazar */
+body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(var(--c-canvas) 17px, rgba(244, 248, 247, 0) 64px), radial-gradient(1100px 560px at 80% -14%, #dcece7 0%, rgba(220, 236, 231, 0) 62%), radial-gradient(820px 460px at -6% -10%, #f6ecde 0%, rgba(246, 236, 222, 0) 58%); }
+#professionalApp { --muted: var(--c-muted); background: transparent; }
+::selection { background: #cfe6df; color: #102e36; }
+input, textarea { caret-color: var(--c-sage); }
+h1, h2, h3 { text-wrap: balance; }
+.p-time, .time, .ag-row-time, .p-focus-info strong { font-variant-numeric: tabular-nums; }
+
+/* Marca: el sello conserva teal y dorado; el nombre pasa a tinta sobre claro */
+.brand { color: var(--c-ink); }
+.brand-mark { background: var(--c-ink); border-color: var(--c-ink); color: #e6c69d; }
+.brand strong span { color: var(--c-sand-deep) !important; }
+.brand small { color: var(--c-muted); }
+
+/* Menú lateral claro: el elegido se marca con un fondo de menta, sin barra de color */
+.p-side, .sidebar { background: var(--c-surface); color: var(--c-muted); }
+.p-nav, .nav-btn { color: var(--c-muted); border-radius: var(--c-r-md); font-weight: 600; transition: background .2s, color .2s; }
+.nav-btn { font-size: 14px; padding: 11px 14px; }
+.p-nav svg, .nav-btn svg { color: var(--c-icon); transition: color .2s; }
+.p-nav:hover, .nav-btn:hover { background: var(--c-mint-soft); color: var(--c-ink); }
+.p-nav.active, .nav-btn.active { background: var(--c-mint); color: var(--c-ink); box-shadow: none; font-weight: 700; }
+.p-nav.active svg, .nav-btn.active svg, .p-nav:hover svg, .nav-btn:hover svg { color: var(--c-ink); }
+.nav-btn.active::before { content: none; }
+.p-count { background: rgba(23, 60, 68, .08); color: var(--c-ink); border-radius: 999px; padding: 1px 8px; font-weight: 700; }
+.nav-section { color: var(--c-muted); letter-spacing: 1.2px; font-weight: 700; }
+.p-side-foot, .sidebar-foot { border-top-color: var(--c-line); color: var(--c-muted); }
+.p-side-foot p, .p-user small, .workspace-disclaimer { color: var(--c-muted); }
+.p-user strong, .sidebar-foot b { color: var(--c-ink); }
+.p-central-entry { border-color: var(--c-line-strong); color: var(--c-muted); }
+.j-profile small { color: var(--c-muted); }
+.j-profile select { background: var(--c-surface); color: var(--c-ink); border-color: var(--c-line-strong); border-radius: var(--c-r-md); }
+.space-switch { background: var(--c-mint-soft); border-color: var(--c-line); }
+.space-switch button.selected { background: var(--c-surface); color: var(--c-ink); box-shadow: var(--c-shadow); }
+
+/* Barra superior: flota sobre el fondo. Una franja del color del fondo tapa el hueco de arriba para que,
+   al desplazar, el contenido desaparezca bajo la barra y no asome por encima */
+.p-top, .topbar { width: calc(100% - 56px); margin: 16px auto 0; top: 16px; border: 1px solid var(--c-line); border-radius: 18px; background: var(--c-surface); backdrop-filter: none; box-shadow: var(--c-shadow); }
+.p-top::before, .topbar::before { content: ''; position: absolute; left: -29px; right: -29px; bottom: calc(100% + 1px); height: 17px; background: var(--c-canvas); pointer-events: none; }
+.p-top { max-width: 1344px; padding: 10px 12px 10px 22px; }
+.topbar { max-width: 1504px; height: 64px; padding: 0 12px 0 22px; }
+.p-content { max-width: 1400px; padding: 32px 28px 80px; }
+.workspace { padding: 32px 28px 72px; }
+#uxPush { top: 104px; right: 28px; }
+.searchbox, .top-actions select, .icon-button { border-color: var(--c-line-strong); border-radius: var(--c-r-md); }
+
+/* Encabezado de página: el título habla solo; la ruta ya dice dónde estás */
+.p-head .p-kicker, .page-head .eyebrow { display: none; }
+#professionalApp h1, .page-head h1 { font-weight: 700; letter-spacing: -.03em; margin-top: 0; }
+.p-head { align-items: flex-end; margin-bottom: 26px; }
+.page-head { margin-bottom: 28px; }
+
+/* Superficies: sin marco duro; un borde apenas visible y una sombra amplia y baja */
+.p-card, .surface, .ux-guide, .ux-today-evo, .ux-push { border: 1px solid var(--c-line); border-radius: var(--c-r-lg); box-shadow: var(--c-shadow); }
+.p-card { padding: 26px; margin-bottom: 22px; }
+.p-grid { gap: 22px; }
+.ux-today-evo { padding: 22px; }
+.ux-today-evo.is-idle, .ux-today-evo.is-done { background: var(--c-mint-soft); box-shadow: none; }
+.p-row, .p-check, .p-setting, .ux-note-item, .ux-doc, .ux-facts > div { border-bottom-color: var(--c-line); }
+#professionalApp .p-clinical-tabs { background: transparent; }
+
+/* El paciente que sigue: la única superficie oscura de la pantalla */
+.p-focus { background: radial-gradient(520px 280px at 94% -24%, rgba(134, 190, 175, .30), rgba(134, 190, 175, 0) 70%), linear-gradient(140deg, #173c44, #1d4850); border-color: transparent; border-radius: var(--c-r-xl); padding: 32px; box-shadow: 0 2px 6px rgba(16, 46, 54, .10), 0 32px 60px -30px rgba(16, 46, 54, .55); }
+.p-focus .p-kicker { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px 5px 10px; border-radius: 999px; background: rgba(224, 187, 142, .14); color: #ecd0ab; font-size: 11.5px; font-weight: 700; letter-spacing: .08em; }
+.p-focus .p-kicker::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #e0bb8e; }
+.p-focus h2 { font-weight: 700; letter-spacing: -.02em; }
+.p-focus-info { border-block-color: rgba(255, 255, 255, .12); margin: 26px 0; padding: 20px 0; }
+.p-avatar { border-radius: 18px; }
+.workspace-hero, .j-route-hero, .insight-hero.surface { border-radius: var(--c-r-xl); }
+
+/* Botones: quietos; cambian de tono al pasar, no de sitio */
+.p-btn, .btn { border-color: var(--c-line-strong); border-radius: var(--c-r-md); color: var(--c-ink); }
+.p-btn { padding: 10px 16px; font-weight: 600 !important; }
+.btn { border-radius: 11px; }
+.p-btn:hover, .btn:hover { background: var(--c-mint-soft); border-color: rgba(23, 60, 68, .22); transform: none; box-shadow: none; }
+.p-btn.primary, .btn.primary { background: var(--c-ink); border-color: var(--c-ink); color: #fff; font-weight: 700 !important; }
+.p-btn.primary:hover, .btn.primary:hover { background: var(--c-ink-hover); border-color: var(--c-ink-hover); }
+.p-btn.gold, .btn.gold { background: var(--c-sand); border-color: var(--c-sand); color: #193b42; font-weight: 700 !important; }
+.p-btn.gold:hover, .btn.gold:hover { background: #dcbb92; border-color: #dcbb92; }
+.p-btn.quiet, .p-btn.quiet:hover { border-color: transparent; }
+.p-btn.quiet { background: transparent; }
+.p-tabs .p-btn { border-radius: 999px; padding-inline: 18px; }
+.p-tabs button.active, .p-tabs button.active:hover { background: var(--c-ink); border-color: var(--c-ink); color: #fff; }
+
+/* Etiquetas y rótulos: píldoras; los rótulos de campo en frase, sin mayúsculas espaciadas */
+.p-tag { border-radius: 999px; padding: 4px 11px; }
+.chip { border-radius: 999px; padding: 8px 14px; }
+#professionalApp .ux-label, #professionalApp .ux-plan-body h4 { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 700; }
+
+/* Listas: filas planas con una línea fina; el estado lo dice la etiqueta, no una franja lateral */
+.p-agenda-list .p-row { border-left: 0; border-radius: 0; background: none; margin: 0; padding: 20px 4px; }
+#professionalApp .ux-appt.is-2 { border-radius: 16px; padding-inline: 16px; background: var(--c-sand-soft); border-bottom-color: transparent; }
+#professionalApp .ux-reception, #professionalApp .ux-reason, .u-outcome, .j-clinical-note { border-left: 0; border-radius: 14px; background: var(--c-mint-soft); }
+#professionalApp .ux-reception { padding: 14px 16px; }
+.p-event { border: 1px solid rgba(57, 138, 121, .18); border-radius: var(--c-r-md); background: #eef6f3; }
+.p-event.block { border-color: rgba(198, 153, 97, .28); background: var(--c-sand-soft); }
+.p-day { border-color: var(--c-line); border-radius: 16px; background: rgba(255, 255, 255, .6); }
+.ux-day { border-color: var(--c-line); border-radius: 16px; }
+.ux-day.active { border-color: var(--c-ink); }
+.p-timeline { border-left-color: var(--c-mint); }
+
+/* Central: agenda, contactos y seguimiento reciben el mismo trato que el espacio profesional */
+.ag-head .eyebrow { display: none; }
+.ag-head { margin-bottom: 28px; }
+.ag-head h1 { font-weight: 700; letter-spacing: -.03em; margin-top: 0; }
+.in-grid, .ag-board { border: 1px solid var(--c-line); border-radius: var(--c-r-lg); box-shadow: var(--c-shadow); }
+.ag-seg { border-color: var(--c-line-strong); border-radius: var(--c-r-md); }
+.ag-seg button.active, .ag-time.active, .ag-option.active { background: var(--c-ink); border-color: var(--c-ink); }
+.ag-nav input, .ag-nav select, .ag-time, .ag-option, .ag-service, .ag-close, .ag-field input, .ag-field select, .ag-search { border-color: #d3e0de; border-radius: var(--c-r-md); }
+.in-item.active, .ag-out.is-fresh, .ag-focus, .ag-picked, .ag-flash { background: var(--c-mint-soft); }
+.in-msg, .in-field, .ag-focus, .ag-picked, .ag-flash, .ag-out.is-fresh { border-radius: 16px; }
+.in-composer > small, .in-next > small, .ag-todo-label, .ag-section h3 { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 700; color: var(--c-muted); }
+.u-context { border-color: var(--c-line); border-radius: 14px; background: var(--c-mint-soft); }
+.ag-scrim { background: rgba(16, 46, 54, .30); }
+.ag-panel { box-shadow: var(--c-shadow-lift); }
+
+/* Campos: borde suave y un halo de menta al enfocar */
+.p-input, .p-modal input, .p-modal select, .p-modal textarea, .ux-today-evo textarea, .ux-note textarea, .ux-note-add textarea, .ux-assess input, .modal input, .modal select { border-color: #d3e0de; border-radius: var(--c-r-md); }
+.p-input:focus, .p-modal input:focus, .p-modal select:focus, .p-modal textarea:focus, .ux-note-add textarea:focus, .ux-assess input:focus, .modal input:focus, .modal select:focus { outline: none; border-color: #8fb9b0; box-shadow: 0 0 0 4px rgba(70, 143, 129, .14); }
+
+/* Diálogos y avisos */
+.p-modal-back, .modal-back { background: rgba(16, 46, 54, .38); backdrop-filter: blur(6px); }
+.p-modal, .modal { border-radius: 24px; padding: 28px; box-shadow: var(--c-shadow-lift); }
+.ux-push { box-shadow: var(--c-shadow-lift); }
+.toast { border-radius: 14px; padding: 14px 18px; font-size: 13px; box-shadow: var(--c-shadow-lift); }
+
+/* Computador y tablet: el menú lateral también flota, como una hoja sobre el fondo */
+@media (min-width: 761px) {
+  .sidebar { margin: 16px 0 16px 16px; height: calc(100vh - 32px); top: 16px; border: 1px solid var(--c-line); border-radius: var(--c-r-xl); box-shadow: var(--c-shadow); }
+}
+@media (min-width: 701px) {
+  .p-layout { grid-template-columns: 264px minmax(0, 1fr); }
+  .p-side { margin: 16px 0 16px 16px; height: calc(100vh - 32px); top: 16px; padding: 26px 14px 20px; border: 1px solid var(--c-line); border-radius: var(--c-r-xl); box-shadow: var(--c-shadow); overflow-y: auto; }
+}
+@media (min-width: 701px) and (max-width: 1150px) {
+  .p-layout { grid-template-columns: 228px minmax(0, 1fr); }
+  .p-side { padding-inline: 10px; }
+  .p-top, .topbar { width: calc(100% - 40px); }
+  .p-top::before, .topbar::before { left: -21px; right: -21px; }
+  .p-content, .workspace { padding: 26px 20px 72px; }
+}
+/* Celular: barra superior flotante y barra inferior con esquinas suaves */
+@media (max-width: 760px) {
+  .topbar { width: calc(100% - 24px); margin-top: 10px; top: 10px; height: 58px; padding: 0 8px 0 10px; border-radius: 16px; }
+  .topbar::before { left: -13px; right: -13px; height: 11px; }
+  .workspace { padding: 20px 16px 50px; }
+  .sidebar.open { box-shadow: var(--c-shadow-lift); }
+  body:not(.professional-mode) .c-tabbar { border-top: 0; border-radius: 22px 22px 0 0; box-shadow: 0 -12px 32px -14px rgba(23, 60, 68, .22); }
+  body:not(.professional-mode) .c-tabbar button { border-radius: 14px; }
+  body:not(.professional-mode) .c-tabbar button.active { background: var(--c-mint); }
+}
+@media (max-width: 700px) {
+  .p-top { width: calc(100% - 24px); margin-top: 10px; top: 10px; padding: 8px 8px 8px 16px; border-radius: 16px; }
+  .p-top::before { left: -13px; right: -13px; height: 11px; }
+  .p-content { padding: 20px 16px 110px; }
+  .p-card { padding: 20px; border-radius: 18px; }
+  .p-focus { padding: 24px; border-radius: 22px; }
+  .p-head { align-items: flex-start; }
+  .p-mobile-nav { border-top: 0; border-radius: 22px 22px 0 0; box-shadow: 0 -12px 32px -14px rgba(23, 60, 68, .22); }
+  .p-mobile-nav button { border-radius: 14px; }
+  .p-mobile-nav button.active { background: var(--c-mint); }
+  #uxPush { top: 10px; right: 12px; }
+}
