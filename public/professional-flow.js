@@ -442,7 +442,7 @@ function remindShow(a, force = false) {
   const p = patient(a.patient), place = a.room || a.site;
   const title = arrived ? 'Tu paciente ya llegó' : 'Próxima cita', detail = `${a.time} · ${a.type} · ${place}`;
   if (first && !arrived) { pNotice('next', title, `${p.name} · ${a.time} · ${place}`, a.patient, a.id); bellSync(); } // la llegada ya tiene su aviso
-  const icon = `<div class="ux-push-icon" aria-hidden="true">${document.querySelector('.brand-mark svg')?.outerHTML || ''}</div>`, dismiss = '<button type="button" class="ux-push-x" data-pro="remind-close" aria-label="Cerrar aviso">×</button>';
+  const icon = `<div class="ux-push-icon" aria-hidden="true"><img src="logo-mark.webp" width="192" height="192" alt=""></div>`, dismiss = '<button type="button" class="ux-push-x" data-pro="remind-close" aria-label="Cerrar aviso">×</button>';
   // La llegada es solo un aviso pasajero: nombre, hora y el mismo acceso a Iniciar atención. El detalle vive en la tarjeta de Mi día,
   // que no cambia ni desaparece al cerrar el aviso.
   remindHost.innerHTML = arrived

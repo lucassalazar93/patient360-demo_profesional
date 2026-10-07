@@ -1,6 +1,6 @@
 /* Capa de calma: aire, superficies suaves y una sola nota oscura por pantalla. Misma paleta (teal, arena, menta) y mismas
    fuentes; cambia el reparto: el fondo y el marco pasan a claro y el teal profundo queda para lo que pide atención.
-   Se carga al final y solo ajusta presentación. Para volver al aspecto anterior basta quitar este archivo de index.html. */
+   Se carga al final y solo ajusta presentación. El logo oficial depende de esta capa: necesita el menú claro para leerse. */
 :root {
   --c-ink: #173c44; --c-ink-hover: #1e4a53; --c-muted: #5b757a; --c-icon: #86a0a3;
   --c-sand: #d5b185; --c-sand-deep: #a5784d; --c-sand-soft: #fbf3e7;
@@ -20,11 +20,16 @@ input, textarea { caret-color: var(--c-sage); }
 h1, h2, h3 { text-wrap: balance; }
 .p-time, .time, .ag-row-time, .p-focus-info strong { font-variant-numeric: tabular-nums; }
 
-/* Marca: el sello conserva teal y dorado; el nombre pasa a tinta sobre claro */
-.brand { color: var(--c-ink); }
-.brand-mark { background: var(--c-ink); border-color: var(--c-ink); color: #e6c69d; }
-.brand strong span { color: var(--c-sand-deep) !important; }
-.brand small { color: var(--c-muted); }
+/* Marca: el logo oficial. Su texto es azul noche, así que siempre va sobre una superficie clara.
+   Profesional usa el logo completo; la central, el sello y el nombre con su propio rótulo debajo */
+.brand { gap: 10px; }
+.brand > div { min-width: 0; }
+.brand-mark { flex: none; width: 44px; height: 44px; border: 0; border-radius: 0; background: none; }
+.brand-word { display: block; width: 100%; max-width: 138px; height: auto; }
+.brand small { margin-top: 5px; color: #04202c; font-size: 9.5px; font-weight: 600; letter-spacing: .2em; white-space: nowrap; }
+.brand-logo { display: block; width: 100%; max-width: 204px; height: auto; }
+.ux-push-icon, .ux-push.is-arrival .ux-push-icon { background: none; border-radius: 0; }
+.ux-push-icon img { display: block; width: 100%; height: 100%; }
 
 /* Menú lateral claro: el elegido se marca con un fondo de menta, sin barra de color */
 .p-side, .sidebar { background: var(--c-surface); color: var(--c-muted); }
@@ -156,6 +161,9 @@ h1, h2, h3 { text-wrap: balance; }
 @media (max-width: 760px) {
   .topbar { width: calc(100% - 24px); margin-top: 10px; top: 10px; height: 58px; padding: 0 8px 0 10px; border-radius: 16px; }
   .topbar::before { left: -13px; right: -13px; height: 11px; }
+  /* Sin menú lateral a la vista, el sello acompaña al botón de menú */
+  .mobile-menu { order: -2; }
+  .topbar::after { content: ''; order: -1; flex: none; width: 30px; height: 30px; margin-left: -6px; background: url(logo-mark.webp) center / contain no-repeat; }
   .workspace { padding: 20px 16px 50px; }
   .sidebar.open { box-shadow: var(--c-shadow-lift); }
   body:not(.professional-mode) .c-tabbar { border-top: 0; border-radius: 22px 22px 0 0; box-shadow: 0 -12px 32px -14px rgba(23, 60, 68, .22); }
@@ -165,6 +173,11 @@ h1, h2, h3 { text-wrap: balance; }
 @media (max-width: 700px) {
   .p-top { width: calc(100% - 24px); margin-top: 10px; top: 10px; padding: 8px 8px 8px 16px; border-radius: 16px; }
   .p-top::before { left: -13px; right: -13px; height: 11px; }
+  /* Sin menú lateral a la vista, el sello ocupa el lugar del nombre: sello / pantalla actual */
+  .p-top { padding-left: 12px; }
+  .p-top-title { min-height: 32px; padding-left: 40px; background: url(logo-mark.webp) left center / 32px 32px no-repeat; }
+  #professionalApp .p-top-title strong { display: none; }
+  #professionalApp .p-top-title span { font-size: 14px; font-weight: 600; line-height: 32px; color: var(--c-ink); }
   .p-content { padding: 20px 16px 110px; }
   .p-card { padding: 20px; border-radius: 18px; }
   .p-focus { padding: 24px; border-radius: 22px; }
