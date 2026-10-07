@@ -88,3 +88,68 @@
   build();
   syncMenu();
 })();
+
+/* Menú lateral contraíble en tablet y computador, para la central y el espacio profesional. Contraído queda un riel
+   de íconos; la preferencia se recuerda en el equipo. En celular el botón de la central sigue abriendo el menú como panel. */
+(() => {
+  const KEY = 'p360-nav', root = document.documentElement;
+  const central = matchMedia('(min-width: 761px)'), professional = matchMedia('(min-width: 701px)');
+  const inPro = () => document.body.classList.contains('professional-mode');
+  // Hay menú lateral que contraer solo cuando se muestra como columna, no como panel ni oculto
+  const hasRail = () => (inPro() ? professional : central).matches;
+  const collapsed = () => root.classList.contains('nav-collapsed');
+
+  function sync() {
+    const isCollapsed = collapsed(), label = isCollapsed ? 'Expandir menú' : 'Contraer menú';
+    const menuBtn = document.getElementById('menuBtn');
+    document.querySelectorAll('[data-nav-toggle]').forEach(b => {
+      b.setAttribute('aria-expanded', String(!isCollapsed));
+      b.setAttribute('aria-label', label);
+      b.title = `${label} (Ctrl+B)`;
+    });
+    if (menuBtn) {
+      const rail = central.matches;
+      menuBtn.setAttribute('aria-label', rail ? label : 'Abrir menú');
+      menuBtn.setAttribute('aria-expanded', String(rail ? !isCollapsed : document.getElementById('sidebar')?.classList.contains('open')));
+      menuBtn.title = rail ? `${label} (Ctrl+B)` : '';
+    }
+    // En el riel solo quedan los íconos: el nombre de la sección pasa a la ayuda emergente
+    const rail = isCollapsed && hasRail();
+    document.querySelectorAll('.nav-btn, .p-nav').forEach(b => {
+      const name = b.querySelector('span')?.textContent.trim();
+      if (rail && name) b.title = name; else b.removeAttribute('title');
+    });
+  }
+
+  function toggle() {
+    const next = !collapsed();
+    root.classList.toggle('nav-collapsed', next);
+    try { localStorage.setItem(KEY, next ? '1' : '0'); } catch (e) { /* sin almacenamiento: vale para esta visita */ }
+    sync();
+  }
+
+  // En captura: en computador el botón de la central contrae el menú en vez de abrirlo como panel
+  document.addEventListener('click', e => {
+    const b = e.target.closest?.('[data-nav-toggle], #menuBtn');
+    if (!b || (b.id === 'menuBtn' && !central.matches)) return;
+    e.stopPropagation();
+    toggle();
+  }, true);
+
+  document.addEventListener('keydown', e => {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== 'b') return;
+    if (!hasRail() || e.target.closest?.('input, textarea, select, [contenteditable]')) return;
+    e.preventDefault();
+    toggle();
+  });
+
+  // El espacio profesional y el menú de la central se redibujan: los botones nuevos reciben su estado
+  let queued = false;
+  new MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => { queued = false; sync(); });
+  }).observe(document.body, { childList: true, subtree: true });
+  central.addEventListener('change', sync);
+  sync();
+})();

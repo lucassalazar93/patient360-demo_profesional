@@ -37,6 +37,46 @@
   body.c-menu-open .c-scrim{display:block;position:fixed;inset:0;background:#102d36a6;z-index:4}
 }
 
+/* Menú lateral contraíble (tablet y computador): queda un riel de íconos y el contenido gana el ancho.
+   El cambio es inmediato: animar el ancho obligaría a recalcular toda la pantalla en cada cuadro.
+   La clase vive en <html> para aplicarse antes de pintar y sobrevivir a cada redibujo del espacio profesional.
+   El nombre de cada sección se oculta solo a la vista: los lectores de pantalla lo siguen anunciando. */
+.mobile-menu .i-panel,.p-nav-toggle,.p-side .brand .brand-mark{display:none}
+.p-top-title{flex:1;min-width:0}
+@media(min-width:701px){
+  #professionalApp .p-nav-toggle{display:inline-flex}
+  #professionalApp .p-top{padding-left:10px}
+  .p-side{overflow-x:hidden}
+  .p-nav{white-space:nowrap}
+  html.nav-collapsed .p-layout{grid-template-columns:92px minmax(0,1fr)}
+  html.nav-collapsed .p-side{padding-inline:12px}
+  html.nav-collapsed .p-side .brand{padding:0;justify-content:center}
+  html.nav-collapsed .p-side .brand-logo{display:none}
+  html.nav-collapsed .p-side .brand .brand-mark{display:block}
+  html.nav-collapsed .p-nav{position:relative;justify-content:center;padding-inline:0}
+  html.nav-collapsed .p-nav-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  html.nav-collapsed .p-count{position:absolute;top:3px;right:4px;margin:0;min-width:17px;height:17px;padding:0 4px;font-size:10px;line-height:17px;text-align:center;background:#173c44;color:#fff}
+  html.nav-collapsed .p-side-foot{padding-inline:0}
+  html.nav-collapsed .p-user{justify-content:center;margin-bottom:0}
+  html.nav-collapsed .p-user>div:last-child,html.nav-collapsed .p-side-foot .p-btn,html.nav-collapsed .p-side-foot p{display:none}
+}
+@media(min-width:761px){
+  .mobile-menu{display:grid}
+  .mobile-menu .i-burger{display:none}
+  .mobile-menu .i-panel{display:block}
+  .app .topbar{padding-left:12px}
+  .topbar .crumb{margin-right:auto}
+  .sidebar{overflow-x:hidden}
+  .nav-btn{white-space:nowrap}
+  html.nav-collapsed .sidebar{width:76px;padding-inline:12px}
+  html.nav-collapsed .sidebar .brand{padding-inline:0;justify-content:center}
+  html.nav-collapsed .sidebar .brand>div,html.nav-collapsed .j-profile,html.nav-collapsed .space-switch,html.nav-collapsed .workspace-disclaimer,html.nav-collapsed .sidebar-foot>div:not(.avatar){display:none}
+  html.nav-collapsed .nav-section{height:1px;margin:10px 8px;padding:0;overflow:hidden;font-size:0;background:#e4ebeb}
+  html.nav-collapsed .nav-btn{position:relative;justify-content:center;padding-inline:0}
+  html.nav-collapsed .nav-btn span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+  html.nav-collapsed .nav-btn em{position:absolute;top:2px;right:4px;margin:0;min-width:17px;height:17px;padding:0 4px;font-size:10px;line-height:17px;text-align:center}
+  html.nav-collapsed .sidebar-foot{justify-content:center;padding-inline:0}
+}
 /* Espacio profesional: la barra ya existía; aquí solo se completa el contador y el foco */
 .p-mobile-nav button{position:relative}
 .p-mobile-nav button[aria-current="page"]{color:#173c44}
