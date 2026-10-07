@@ -4,16 +4,16 @@
    appointments-core.js (P360). La fecha visible es state.agendaDay, la misma que usan los módulos anteriores. */
 (() => {
   const PX = 1.5, DAY_START = 480, DAY_END = 1080; // 1,5 px por minuto, de 08:00 a 18:00
-  const ag = { mode: 'day', professional: 'Todos', panel: null };
+  const ag = { mode: 'day', professional: 'Todos', panel: null, contact: null, contactOpen: false, flash: null };
   const CANCEL_REASONS = ['El paciente no puede asistir', 'Enfermedad', 'Motivo económico', 'La clínica reprograma', 'Otro'];
   const PAY_METHODS = ['Transferencia', 'Tarjeta', 'Efectivo'];
-  const EVENT_LABELS = { reserva: 'Cita reservada', confirmacion: 'Confirmada por el paciente', sin_respuesta: 'Sin respuesta', cambio_solicitado: 'Cambio de horario solicitado', reprogramacion: 'Reprogramada', cancelacion: 'Cancelada', llegada: 'Llegada', inicio_atencion: 'Inicio de atención', fin_atencion: 'Fin de atención', cobro: 'Cobro', salida: 'Salida administrativa', no_asistio: 'No asistió' };
+  const EVENT_LABELS = { reserva: 'Cita reservada', confirmacion: 'Confirmada por el paciente', sin_respuesta: 'Sin respuesta', cambio_solicitado: 'Cambio de horario solicitado', reprogramacion: 'Reprogramada', cancelacion: 'Cancelada', llegada: 'Llegada', inicio_atencion: 'Inicio de atención', fin_atencion: 'Fin de atención', cobro: 'Cobro', salida: 'Salida administrativa', no_asistio: 'No asistió', seguimiento: 'Seguimiento programado' };
 
   // ── Ayudas de formato
   const cap = text => text.charAt(0).toUpperCase() + text.slice(1);
   const dayOf = (date, options) => new Date(date + 'T12:00:00').toLocaleDateString('es-CO', options).replace('.', '');
   const longDay = date => cap(dayOf(date, { weekday: 'long', day: 'numeric', month: 'long' }));
-  const shortDay = date => (date === P360.today ? 'Hoy' : date === addDays(P360.today, 1) ? 'Mañana' : cap(dayOf(date, { weekday: 'short', day: 'numeric', month: 'short' })));
+  const shortDay = date => (date === P360.today ? 'Hoy' : date === addDays(P360.today, 1) ? 'Mañana' : date === addDays(P360.today, -1) ? 'Ayer' : cap(dayOf(date, { weekday: 'short', day: 'numeric', month: 'short' })));
   const norm = text => String(text).toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
   const clinicalEnd = a => hhmm(minutes(a.time) + Number(a.clinicalDuration || a.duration));
   const button = (label, action, value = '', style = '') => `<button type="button" class="btn ${style}" data-ag="${action}" data-val="${esc(value)}">${label}</button>`;
@@ -103,7 +103,7 @@
     if (!a) return '';
     const person = patient(a.patient), main = P360.nextAction(a), money = P360.financeOf(a);
     const head = `<header class="ag-panel-head"><div><span class="ag-tag is-${P360.phase(a)}">${P360.phaseLabels[P360.phase(a)]}</span><h2>${esc(person.name)}</h2><p>${esc(a.type)}</p></div>${closeButton}</header>
-      <dl class="ag-facts"><div><dt>Cuándo</dt><dd>${shortDay(a.date)} · ${a.time}–${clinicalEnd(a)}</dd></div><div><dt>Con</dt><dd>${esc(a.professional)}</dd></div><div><dt>Dónde</dt><dd>${esc(a.site)}${a.room ? ' · ' + esc(a.room) : ''}</dd></div><div><dt>Celular</dt><dd>${esc(person.phone)}</dd></div></dl>`;
+      <dl class="ag-facts"><div><dt>Cuándo</dt><dd>${shortDay(a.date)} · ${a.time}–${clinicalEnd(a)} · ${Number(a.clinicalDuration || a.duration)} min</dd></div><div><dt>Con</dt><dd>${esc(a.professional)}</dd></div><div><dt>Dónde</dt><dd>${esc(a.site)}${a.room ? ' · ' + esc(a.room) : ''}</dd></div><div><dt>Celular</dt><dd>${esc(person.phone)}</dd></div></dl>`;
     const error = p.error ? `<p class="ag-error" role="alert">${esc(p.error)}</p>` : '';
 
     if (p.sub === 'reschedule') return head + `<section class="ag-section"><h3>Nuevo horario</h3><p class="ag-hint">La cita actual se conserva hasta confirmar el cambio.</p>${slotPicker({ professional: a.professional, site: a.site, duration: a.duration + (a.clinicalDuration ? 0 : Number(a.buffer || 0)), patient: a.patient, ignoreId: a.id }, p.slot, p.day)}
@@ -121,7 +121,8 @@
       <div class="ag-panel-actions">${link('Volver', 'sub', '')}${button('Registrar cobro', 'pay-save', '', 'primary')}</div></section>`;
 
     const prep = P360.prepItems(a);
-    return head + `<section class="ag-focus"><p>${esc(P360.describe(a))}</p>${main ? button(main.label, 'do', main.key, 'primary ag-main') : ''}<div class="ag-others">${P360.otherActions(a).map(o => link(o.label, 'do', o.key)).join('')}</div></section>
+    const sent = a.confirmMessage && P360.stateOf(a).visit === 'pendiente' ? `<section class="ag-section"><h3>Mensaje enviado</h3><div class="in-msg is-out"><p>${esc(a.confirmMessage)}</p><time>WhatsApp · entregado</time></div></section>` : '';
+    return head + `<section class="ag-focus"><p>${esc(P360.describe(a))}</p>${main ? button(main.label, 'do', main.key, (main.quiet ? '' : 'primary ') + 'ag-main') : ''}<div class="ag-others">${P360.otherActions(a).map(o => link(o.label, 'do', o.key)).join('')}</div></section>${sent}
       ${prep.length ? `<section class="ag-section" id="agPrep"><h3>Preparación</h3>${prep.map(key => `<button type="button" class="ag-check${a.prepDone?.[key] ? ' done' : ''}" data-ag="prep" data-val="${key}"><i>${a.prepDone?.[key] ? '✓' : ''}</i>${P360.prepLabels[key]}</button>`).join('')}</section>` : ''}
       ${a.note ? `<section class="ag-section"><h3>Observación</h3><p>${esc(a.note)}</p></section>` : ''}${timeline(a)}`;
   }
@@ -137,6 +138,8 @@
       if (!p.slot) p.fromMissed = true;
       p.from = null;
     }
+    if (p.compact) return `<header class="ag-panel-head"><div><span class="eyebrow">${p.title || 'Agendar'}</span><h2>${esc(person.name)}</h2><p>${esc(service?.name || p.type)} · ${service?.duration || 45} min</p></div>${closeButton}</header>
+      <section class="ag-section"><div class="ag-picked"><span><b>${esc(p.professional)}</b><small>${esc(p.site)}</small></span>${link('Cambiar', 'expand')}</div>${slotPicker(query, null, p.day)}</section>${p.error ? `<p class="ag-error" role="alert">${esc(p.error)}</p>` : ''}`;
     const ready = hasPatient && hasService && p.slot && (!p.contact || p.contact.name.trim().length > 1) && (!p.custom || p.type.trim());
     const who = person
       ? `<div class="ag-picked"><span><b>${esc(person.name)}</b><small>${esc(person.phone)}</small></span>${p.locked ? '' : link('Cambiar', 'unpick')}</div>`
@@ -163,7 +166,7 @@
     const person = seed.patient ? patient(seed.patient) : null;
     const last = person ? appointments.filter(a => a.patient === person.id && a.status !== 'Cancelada').sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))[0] : null;
     const service = services.find(s => s.id === seed.serviceId) || null;
-    ag.panel = { kind: 'book', title: seed.title || '', patient: person?.id || null, locked: !!seed.locked, contact: null, query: '', serviceId: service?.id || null, custom: !!seed.type, type: seed.type || '',
+    ag.panel = { kind: 'book', compact: !!seed.compact && !!person && (!!service || !!seed.type), title: seed.title || '', patient: person?.id || null, locked: !!seed.locked, contact: null, query: '', serviceId: service?.id || null, custom: !!seed.type, type: seed.type || '',
       professional: seed.professional || service?.professional || last?.professional || (ag.professional === 'Todos' ? professionals[0] : ag.professional),
       site: seed.site || last?.site || person?.site || (state.site === 'Todas las sedes' ? 'El Tesoro' : state.site),
       proFixed: !!seed.professional, from: seed.date && seed.time ? { date: seed.date, time: seed.time } : null, slot: null, day: seed.day || '', note: '', noteOpen: false, rebookOf: seed.rebookOf || null, after: seed.after || null, error: '' };
@@ -172,6 +175,10 @@
   }
   const openAppt = (id, sub = null) => { ag.panel = { kind: 'appt', id: Number(id), sub, slot: null, day: '', reason: sub === 'cancel' ? CANCEL_REASONS[0] : '', followUp: true, error: '' }; drawPanel(); };
   const closePanel = () => { ag.panel = null; drawPanel(); };
+  function donePanel(p) {
+    const a = appointments.find(x => x.id === p.id);
+    return `<div class="ag-done"><span class="ag-done-mark" aria-hidden="true">✓</span><span class="eyebrow">Cita reservada</span><h2>${esc(patient(a.patient).name)}</h2><p>${esc(a.type)}</p><p>${esc(a.professional)}</p><p class="ag-done-when">${longDay(a.date)} · ${a.time}</p>${button('Ver cita', 'see', a.id, 'primary ag-main')}${link('Cerrar', 'close')}</div>`;
+  }
 
   const host = document.createElement('aside'), scrim = document.createElement('div');
   host.id = 'agPanel'; host.className = 'ag-panel'; host.hidden = true; host.setAttribute('aria-label', 'Detalle de la cita');
@@ -180,38 +187,124 @@
   function drawPanel() {
     const open = !!ag.panel && !pro.active, scroll = host.scrollTop;
     host.hidden = scrim.hidden = !open;
-    host.innerHTML = !open ? '' : ag.panel.kind === 'book' ? bookPanel(ag.panel) : apptPanel(ag.panel);
+    host.innerHTML = !open ? '' : ag.panel.kind === 'book' ? bookPanel(ag.panel) : ag.panel.kind === 'done' ? donePanel(ag.panel) : apptPanel(ag.panel);
     host.scrollTop = scroll;
   }
 
   // ── Salidas: lo que recepción cierra después de la atención. Sin funciones clínicas
+  // Qué falta para cerrar una salida: resolver el pago de la visita y definir qué ocurre después
+  function exitStatus(a) {
+    const money = P360.financeOf(a), control = P360.nextControl(a), next = appointments.find(x => x.id === a.nextAppointment) || null, follow = a.followUp || null;
+    const pay = { money, done: money.balance === 0 || money.paid > 0 };
+    const cont = { next, follow, done: !!(next || follow), text: a.plan?.next?.[0] || (control ? `Control en ${control.days} días` : 'Coordinar la próxima cita'), action: a.plan ? ['Crear seguimiento', 'out-follow'] : ['Agendar próxima', 'out-next'] };
+    return { pay, cont, ready: pay.done && cont.done };
+  }
   function checkoutView() {
     const queue = P360.checkoutQueue().filter(a => state.site === 'Todas las sedes' || a.site === state.site);
     const done = appointments.filter(a => a.date === P360.today && P360.phase(a) === 'completa').length;
+    const f = ag.flash, flash = f ? `<section class="ag-flash"><span class="ag-done-mark" aria-hidden="true">✓</span><div><span class="eyebrow">Salida finalizada</span><h2>${esc(patient(f.patient).name)}</h2>${f.followUps.map(t => `<p><b>Seguimiento programado · ${shortDay(t.date)} ${t.time}</b><br>${esc(t.title)}</p>`).join('') || '<p>Sin seguimiento pendiente: ya tiene su próxima cita.</p>'}</div>${f.followUps.length ? button('Ver seguimiento', 'go', 'seguimiento', 'primary') : ''}</section>` : '';
     return `<div class="ag"><header class="ag-head"><div><span class="eyebrow">Salidas</span><h1>${queue.length ? `${queue.length} ${queue.length === 1 ? 'paciente por cerrar' : 'pacientes por cerrar'}` : 'Todo al día'}</h1><p>${done ? `${done} ${done === 1 ? 'salida completada' : 'salidas completadas'} hoy` : 'Cada atención finalizada llega aquí sola.'}</p></div></header>
-      ${queue.map(a => { const person = patient(a.patient), money = P360.financeOf(a), control = P360.nextControl(a), next = appointments.find(x => x.id === a.nextAppointment);
-        return `<article class="ag-out"><div><h2>${esc(person.name)}</h2><p>Atención finalizada${P360.eventTime(a, 'fin_atencion') ? ' a las ' + P360.eventTime(a, 'fin_atencion') : ''} · ${esc(a.professional)} · ${esc(a.site)}</p>
-          <dl class="ag-facts"><div><dt>Realizado</dt><dd>${esc(a.type)}</dd></div><div><dt>Saldo</dt><dd>${money.balance ? fmt(money.balance) : money.due ? 'Pagada' : 'Sin cobro en esta visita'}</dd></div><div><dt>Próximo paso</dt><dd>${next ? `Cita ${shortDay(next.date).toLowerCase()} ${next.time}` : control ? `Control en ${control.days} días` : 'Coordinar próxima cita'}</dd></div></dl></div>
-          <div class="ag-out-actions">${money.balance ? button('Cobrar', 'out-pay', a.id, 'primary') : ''}${next ? '' : button('Agendar próxima cita', 'out-next', a.id)}${button('Finalizar salida', 'out-close', a.id, money.balance ? '' : 'primary')}</div></article>`; }).join('') || '<p class="ag-empty">Cuando un profesional finaliza una atención, el paciente aparece aquí para cobrar, agendar y cerrar.</p>'}</div>`;
+      ${flash}${queue.map(a => { const person = patient(a.patient), estimate = a.plan ? P360.catalogValue(a.plan.title) : null, st = exitStatus(a), money = st.pay.money, c = st.cont;
+        const payBlock = st.pay.done
+          ? `<section class="ag-todo"><span class="ag-todo-label">Pago de hoy</span><p class="ag-todo-ok"><i aria-hidden="true">✓</i>${money.due ? 'Pago registrado' : 'Sin cobro en esta visita'}</p>${money.balance ? `<p class="ag-todo-note">Saldo en cartera ${fmt(money.balance)}</p>` : ''}</section>`
+          : `<section class="ag-todo"><span class="ag-todo-label">Pago de hoy</span><span class="ag-todo-hint">Valor pendiente</span><p class="ag-todo-value">${fmt(money.balance)}</p>${button('Registrar pago', 'out-pay', a.id, 'primary')}</section>`;
+        const contBlock = c.done
+          ? `<section class="ag-todo"><span class="ag-todo-label">Continuidad</span><p class="ag-todo-ok"><i aria-hidden="true">✓</i>${c.next ? 'Próxima cita agendada' : 'Seguimiento programado'}</p><p class="ag-todo-note">${c.next ? `${shortDay(c.next.date)} · ${c.next.time}` : `${shortDay(c.follow.date)} · ${c.follow.time}`}</p></section>`
+          : `<section class="ag-todo"><span class="ag-todo-label">Continuidad</span><p class="ag-todo-text">${esc(c.text)}</p>${button(c.action[0], c.action[1], a.id, 'primary')}</section>`;
+        const closeBtn = st.ready ? button('Finalizar salida', 'out-close', a.id, 'primary') : `<button type="button" class="btn" disabled title="Falta resolver el pago y la continuidad" data-ag="out-close" data-val="${a.id}">Finalizar salida</button>`;
+        return `<article class="ag-exit"><div class="ag-exit-head"><h2>${esc(person.name)}</h2><p>Atención terminada${P360.eventTime(a, 'fin_atencion') ? ' a las ' + P360.eventTime(a, 'fin_atencion') : ''} · ${esc(a.professional)}</p>
+          <dl class="ag-facts"><div><dt>Realizado</dt><dd>${esc(a.type)}</dd></div>${a.plan ? `<div><dt>Tratamiento recomendado</dt><dd>${esc(a.plan.title)}</dd></div>${estimate !== null ? `<div><dt>Valor estimado del catálogo</dt><dd>${fmt(estimate)}</dd></div>` : ''}` : ''}</dl></div>
+          <div class="ag-todo-grid">${payBlock}${contBlock}</div><div class="ag-exit-foot">${closeBtn}</div></article>`; }).join('') || (flash ? '' : '<p class="ag-empty">Cuando un profesional finaliza una atención, el paciente aparece aquí para cobrar, agendar y cerrar.</p>')}</div>`;
+  }
+
+
+  // ── Contactos: donde empieza la relación con el paciente. Conversaciones simuladas; la de Sofía es el caso guiado
+  const today0 = P360.today;
+  const inbox = [
+    { id: 'sofia', name: 'Sofía Restrepo', phone: '300 000 0190', source: 'Instagram', campaign: 'Sonrisa consciente', interest: 'Diseño de sonrisa', service: 'Valoración estética', professional: professionals[0], site: 'El Tesoro', duration: 45, patient: null, replied: false,
+      messages: [{ from: 'in', text: 'Hola, quisiera información sobre diseño de sonrisa.', at: '08:21', day: today0 }],
+      suggestion: 'Hola Sofía 👋 Claro. Podemos comenzar con una valoración estética para conocer tu caso y proponerte un plan a tu medida. ¿Te gustaría agendarla?',
+      profile: { consult: { clinical: ['Interesada en diseño de sonrisa.', 'Ansiedad dental.'], reception: ['Prefiere contacto por WhatsApp.'] }, allergies: [], medication: [], conditions: ['Ansiedad dental'], anesthesia: 'Sin reacciones conocidas', bloodPressure: '110/70 mmHg', reason: 'Quiere mejorar el color y la forma de los dientes anteriores.', expectation: 'Un resultado natural para su grado en diciembre.', habits: ['Café, 2 tazas al día'], hygiene: 'Cepillado 3 veces al día y seda dental', lastCleaning: '2026-07-18', history: ['Ortodoncia (2015–2017)'], emergency: 'Marta Restrepo · madre · 300 000 0191', documents: [['Consentimiento informado', today0]], notes: [{ author: 'Laura · Recepción', date: today0, text: 'Llegó por Instagram preguntando por diseño de sonrisa. Prefiere que le escriban por WhatsApp.' }] } },
+    { id: 'mariana', name: 'Mariana Vélez', phone: '300 000 0103', source: 'WhatsApp', interest: 'Control de ortodoncia', kind: 'reschedule', patient: 3, replied: false,
+      messages: [{ from: 'in', text: 'Buenos días, hoy no alcancé a llegar. ¿Puedo pasar el control para otro día?', at: '08:12', day: today0 }],
+      suggestion: 'Hola Mariana, claro que sí. Ya te busco un nuevo horario con el Dr. Mateo.' },
+    { id: 'carlos', name: 'Carlos Arango', phone: '300 000 0109', source: 'WhatsApp', interest: 'Control de ortodoncia', patient: 9, replied: true,
+      messages: [{ from: 'out', text: 'Hola Carlos, te recordamos tu control de hoy a las 09:00 con el Dr. Mateo Cárdenas.', at: '07:30', day: today0 }, { from: 'in', text: 'Confirmado, allá estaré.', at: '07:42', day: today0 }] }
+  ];
+  const contactById = id => inbox.find(c => c.id === id) || null;
+  const ensureFicha = c => { // la ficha se crea al primer movimiento, con lo que la conversación ya dijo
+    if (c.patient) return;
+    c.patient = P360.createContact({ name: c.name, phone: c.phone, site: c.site, source: c.source, campaign: c.campaign, interest: c.interest, age: 29 }).id;
+    if (c.profile) clinicalProfiles[c.patient] = c.profile;
+    say(c, 'sys', 'Ficha creada en Patient 360');
+  };
+  const contactOf = pid => inbox.find(c => c.patient === pid) || null;
+  const say = (c, from, text) => c.messages.push({ from, text, at: P360.nowTime(), day: P360.today });
+  const latestVisit = c => (c.patient ? appointments.filter(a => a.patient === c.patient).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))[0] : null) || null;
+  const when = m => (m.day === P360.today ? (P360.nowMinute() - minutes(m.at) < 60 ? `Hace ${Math.max(1, P360.nowMinute() - minutes(m.at))} min` : m.at) : `${shortDay(m.day)} ${m.at}`);
+  // Qué está pasando con el contacto y cuál es su acción principal
+  function contactStage(c) {
+    const a = latestVisit(c);
+    if (!c.replied) return c.kind === 'reschedule' ? { tag: 'Reprogramar', tone: 'cambio' } : { tag: 'Nuevo', tone: 'por_confirmar' };
+    if (!a) return { tag: 'Respondido', tone: 'confirmada', next: !!c.service };
+    const follow = P360.phase(a) === 'completa' ? careTasks.find(t => t.patient === c.patient && !t.done && t.auto) : null;
+    if (follow) return { tag: 'En seguimiento', tone: 'llego', action: button('Ver seguimiento', 'go', 'seguimiento'), follow };
+    const rebook = c.kind === 'reschedule' && ['no_asistio', 'cancelada', 'cambio'].includes(P360.phase(a)); // sigue pendiente de reprogramar
+    return { tag: rebook ? 'Reprogramar' : P360.phaseLabels[P360.phase(a)], tone: rebook ? 'cambio' : P360.phase(a), action: button('Ver cita', 'see', a.id, c.id === 'sofia' && P360.phase(a) === 'por_confirmar' ? 'primary' : ''), visit: a };
+  }
+  function contactsView() {
+    const fresh = inbox.filter(c => !c.replied).length, selected = contactById(ag.contact) || inbox[0], stage = contactStage(selected), last = c => c.messages.at(-1);
+    const list = inbox.map(c => { const st = contactStage(c); return `<button type="button" class="in-item${c.id === selected.id ? ' active' : ''}${c.replied ? '' : ' unread'}" data-ag="contact-open" data-val="${c.id}"><span class="in-top"><b>${esc(c.name)}</b><time>${when(last(c))}</time></span><small>${esc(c.source)} · ${esc(c.interest)}</small><span class="in-preview">${esc(last(c).text)}</span><span class="ag-tag is-${st.tone}">${st.tag}</span></button>`; }).join('');
+    const bubbles = selected.messages.map(m => m.from === 'sys' ? `<p class="in-sys">${esc(m.text)}</p>` : `<div class="in-msg is-${m.from}"><p>${esc(m.text)}</p><time>${m.day === P360.today ? m.at : shortDay(m.day) + ' ' + m.at}</time></div>`).join('');
+    const draft = selected.draft ?? selected.suggestion, task = selected.followUp;
+    const foot = !selected.replied
+      ? `<div class="in-composer"><small>Respuesta sugerida</small><div class="in-field"><textarea id="inDraft" rows="3" maxlength="600" aria-label="Respuesta a ${esc(selected.name)}">${esc(draft)}</textarea><button type="button" class="btn primary" data-ag="reply" data-val="${selected.id}"${draft.trim() ? '' : ' disabled'}>Enviar</button></div></div>`
+      : stage.next ? `<div class="in-next"><small>Siguiente paso</small><b>${esc(selected.service)}</b><span>${selected.duration} min · ${esc(selected.professional)}</span><div class="in-next-actions">${button(`Agendar ${selected.service.split(' ')[0].toLowerCase()}`, 'contact-book', selected.id, 'primary')}${task ? `<span class="in-muted">Seguimiento creado · ${shortDay(task.date)} ${task.time}</span>` : link('Crear seguimiento', 'contact-follow', selected.id)}</div></div>`
+      : stage.follow ? `<div class="in-visit"><span><b>${esc(stage.follow.title)}</b><small>Seguimiento · ${shortDay(stage.follow.date)} ${stage.follow.time}</small></span>${stage.action}</div>`
+      : stage.visit ? `<div class="in-visit"><span><b>${esc(stage.visit.type)}</b><small>${shortDay(stage.visit.date)} · ${stage.visit.time} · ${esc(stage.visit.professional)}</small></span>${stage.action}</div>` : stage.action;
+    return `<div class="ag in${ag.contactOpen ? ' is-open' : ''}"><header class="ag-head"><div><span class="eyebrow">Contactos</span><h1>${fresh ? `${fresh} ${fresh === 1 ? 'contacto por responder' : 'contactos por responder'}` : 'Todo respondido'}</h1></div></header>
+      <div class="in-grid"><div class="in-list">${list}</div>
+        <section class="in-chat" aria-label="Conversación con ${esc(selected.name)}"><header><button type="button" class="ag-link in-back" data-ag="contact-back">‹ Contactos</button><div><h2>${esc(selected.name)}</h2><p>${esc(selected.source)} · ${esc(selected.interest)} · ${esc(selected.phone)}</p></div><span class="ag-tag is-${stage.tone}">${stage.tag}</span></header>
+          <div class="in-messages">${bubbles}</div><footer>${foot}</footer></section></div></div>`;
+  }
+
+  // ── Seguimiento: lo que Patient 360 deja programado para que ningún paciente se pierda
+  function followView() {
+    const list = careTasks.filter(t => !t.done && t.owner !== proName && (t.auto || t.date >= P360.today)).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+    return `<div class="ag"><header class="ag-head"><div><span class="eyebrow">Seguimiento</span><h1>${list.length ? `${list.length} ${list.length === 1 ? 'seguimiento pendiente' : 'seguimientos pendientes'}` : 'Sin seguimientos pendientes'}</h1><p>Patient 360 los programa solo al cerrar cada visita.</p></div></header>
+      ${list.map(t => `<article class="ag-out${t.fresh ? ' is-fresh' : ''}"><div><h2>${esc(patient(t.patient)?.name || 'Paciente')}</h2><p>${shortDay(t.date)}${t.time ? ' · ' + t.time : ''} · ${esc(t.owner)}${t.fresh ? ' · <b>recién creado</b>' : ''}</p><p class="fu-text">${esc(t.title)}</p></div><div class="ag-out-actions">${button('Contactar', 'fu-contact', t.id, 'primary')}${button('Marcar hecho', 'fu-done', t.id)}</div></article>`).join('') || '<p class="ag-empty">Cuando cierres una salida, el siguiente contacto con el paciente aparecerá aquí.</p>'}</div>`;
   }
 
   // ── Acciones
   const finish = (result, message) => { if (result.error) { if (ag.panel) ag.panel.error = result.error; else toast(result.error); drawPanel(); return false; } render(); if (message) toast(message); return true; };
   function rebook(a, extra = {}) {
-    const control = extra.after ? P360.nextControl(a) : null; // la próxima cita toma el control que indica el servicio
-    openBook({ patient: a.patient, locked: true, serviceId: control ? null : a.serviceId, type: control ? control.title : a.serviceId ? '' : a.type, professional: a.professional, site: a.site, ...extra, ...(control ? { day: addDays(a.date, control.days) } : {}) });
+    const control = extra.after && !a.plan ? P360.nextControl(a) : null; // la próxima cita toma el plan recomendado o el control del servicio
+    const type = extra.after && a.plan ? a.plan.title + ' · inicio' : control ? control.title : a.serviceId ? '' : a.type;
+    openBook({ patient: a.patient, locked: true, compact: true, serviceId: type ? null : a.serviceId, type, professional: a.professional, site: a.site, ...extra, ...(control ? { day: addDays(a.date, control.days) } : {}) });
   }
   function perform(key) {
     const a = current();
     if (!a) return;
     if (key === 'patient') { closePanel(); return selectPatient(a.patient); }
-    if (key === 'checkout') { if (!allowed(canCheckout())) return; return P360.financeOf(a).balance ? openAppt(a.id, 'pay') : finish(P360.closeCheckout(a), 'Salida completada.'); }
+    if (key === 'travel') { P360.travelTo(a); state.view = 'agenda'; ag.mode = 'day'; render(); return toast(`${longDay(P360.today)} · ${P360.nowTime()}`); }
+    if (key === 'aspro') { closePanel(); return pEnter(); }
+    if (key === 'checkout') {
+      if (!allowed(canCheckout())) return;
+      const st = exitStatus(a);
+      if (!st.pay.done) return openAppt(a.id, 'pay');
+      if (!st.ready) { closePanel(); return go('salidas'); } // falta definir la continuidad: se resuelve en Salidas
+      return finish(P360.closeCheckout(a), 'Salida finalizada.');
+    }
     if (!allowed(canBook())) return;
     if (key === 'reschedule' || key === 'cancel') return openAppt(a.id, key);
     if (key === 'rebook') return rebook(a, { title: 'Reagendar', rebookOf: a.id });
     if (key === 'next') return rebook(a, { title: 'Próxima cita', after: a.id });
     if (key === 'prep') return document.getElementById('agPrep')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    if (key === 'confirm') return finish(P360.confirm(a), 'Cita confirmada.');
+    if (key === 'confirm') {
+      const result = P360.confirm(a), c = contactOf(a.patient);
+      if (c && result.message) { say(c, 'out', result.message); say(c, 'in', '¡Listo, ahí estaré!'); }
+      return finish(result, 'Mensaje enviado. Cita confirmada.');
+    }
     if (key === 'noresponse') return finish(P360.noResponse(a), 'Marcada sin respuesta.');
     if (key === 'arrive') return finish(P360.arrive(a), `${patient(a.patient).name} llegó. ${a.professional} ya lo ve en su día.`);
     if (key === 'noshow') return finish(P360.noShow(a), 'Marcada como no asistió.');
@@ -228,19 +321,57 @@
     if (action === 'shift') { state.agendaDay = addDays(state.agendaDay, Number(value) * (ag.mode === 'week' ? 7 : 1)); return render(); }
     if (action === 'out-pay') return allowed(canCheckout()) && openAppt(value, 'pay');
     if (action === 'out-next') { const a = appointments.find(x => x.id === Number(value)); return allowed(canBook()) && rebook(a, { title: 'Próxima cita', after: a.id }); }
-    if (action === 'out-close') { const a = appointments.find(x => x.id === Number(value)), balance = P360.financeOf(a).balance; return allowed(canCheckout()) && finish(P360.closeCheckout(a), balance ? `Salida completada. El saldo de ${fmt(balance)} queda en cartera.` : 'Salida completada.'); }
+    if (action === 'out-follow') { if (!allowed(canCheckout())) return; P360.scheduleFollowUp(appointments.find(x => x.id === Number(value))); return finish({}, 'Seguimiento programado.'); }
+    if (action === 'out-close') {
+      if (!allowed(canCheckout())) return;
+      const a = appointments.find(x => x.id === Number(value));
+      if (!exitStatus(a).ready) return toast('Resuelve el pago y la continuidad para finalizar la salida.');
+      const balance = P360.financeOf(a).balance, result = P360.closeCheckout(a), tasks = [a.followUp, ...(result.followUps || [])].filter(Boolean);
+      careTasks.forEach(t => { t.fresh = false; });
+      if (!result.error) { tasks.forEach(t => { t.fresh = true; }); ag.flash = { patient: a.patient, followUps: tasks }; }
+      return finish(result, balance ? `Salida finalizada. El saldo de ${fmt(balance)} queda en cartera.` : 'Salida finalizada.');
+    }
+    if (action === 'go') return go(value);
+    if (action === 'see') { const a = appointments.find(x => x.id === Number(value)); state.view = 'agenda'; state.agendaDay = a.date; ag.mode = 'day'; render(); return openAppt(a.id); }
+    if (action === 'contact-open') { ag.contact = value; ag.contactOpen = true; return render(); }
+    if (action === 'contact-back') { ag.contactOpen = false; return render(); }
+    if (action === 'reply') {
+      const c = contactById(value), text = (document.getElementById('inDraft')?.value ?? c.draft ?? c.suggestion).trim();
+      if (!text) return toast('Escribe la respuesta antes de enviar.');
+      c.replied = true; delete c.draft;
+      Object.assign(ag, { contact: c.id, contactOpen: true });
+      say(c, 'out', text);
+      return render();
+    }
+    if (action === 'contact-follow') {
+      const c = contactById(value);
+      ensureFicha(c);
+      c.followUp = { id: nextId(careTasks), patient: c.patient, title: `Retomar la conversación sobre ${c.interest.toLowerCase()}`, date: addDays(P360.today, 1), time: '10:00', owner: 'Laura Martínez', done: false, auto: true, fresh: true };
+      careTasks.push(c.followUp);
+      say(c, 'sys', `Seguimiento creado · ${shortDay(c.followUp.date).toLowerCase()} ${c.followUp.time}`);
+      return render();
+    }
+    if (action === 'contact-book') {
+      const c = contactById(value);
+      if (!allowed(canBook())) return;
+      ensureFicha(c);
+      return openBook({ patient: c.patient, locked: true, compact: true, type: c.service, professional: c.professional, site: c.site, title: `Agendar ${c.service.split(' ')[0].toLowerCase()}` });
+    }
+    if (action === 'fu-done') { const t = careTasks.find(x => x.id === Number(value)); t.done = true; render(); return toast('Seguimiento hecho.'); }
+    if (action === 'fu-contact') { const t = careTasks.find(x => x.id === Number(value)), c = contactOf(t.patient); if (!c) return selectPatient(t.patient); Object.assign(ag, { contact: c.id, contactOpen: true }); return go('contactos'); }
     if (!p) return;
     p.error = '';
     if (action === 'do') return perform(value);
     if (action === 'sub') { p.sub = value || null; p.slot = null; p.day = ''; return drawPanel(); }
-    if (action === 'pick') { const [date, time] = value.split('|'); p.slot = { date, time }; return drawPanel(); }
+    if (action === 'pick') { const [date, time] = value.split('|'); p.slot = { date, time }; return p.compact ? dispatch('book-save', '') : drawPanel(); }
+    if (action === 'expand') { p.compact = false; return drawPanel(); }
     if (action === 'reason') { p.reason = value; return drawPanel(); }
     if (action === 'follow') { p.followUp = !p.followUp; return drawPanel(); }
     if (action === 'method') { p.method = value; return drawPanel(); }
     if (action === 'prep') { P360.togglePrep(current(), value); return render(); }
     if (action === 'reschedule-save') return finish(P360.reschedule(current(), p.slot, p.reason), 'Cita reprogramada.') && openAppt(p.id);
     if (action === 'cancel-save') return finish(P360.cancel(current(), p.reason, p.followUp), 'Cita cancelada. El horario quedó libre.') && openAppt(p.id);
-    if (action === 'pay-save') return finish(P360.charge(current(), Number(p.amount ?? P360.financeOf(current()).balance), p.method || PAY_METHODS[0]), 'Cobro registrado.') && openAppt(p.id);
+    if (action === 'pay-save') return finish(P360.charge(current(), Number(p.amount ?? P360.financeOf(current()).balance), p.method || PAY_METHODS[0]), 'Pago registrado.') && (state.view === 'salidas' ? closePanel() : openAppt(p.id));
     if (action === 'patient') { p.patient = Number(value); const person = patient(p.patient); p.site = person.site; p.slot = null; return drawPanel(); }
     if (action === 'contact') { p.contact = { name: cap(p.query.trim()), phone: '' }; drawPanel(); return document.getElementById('agContactPhone')?.focus(); }
     if (action === 'unpick') { p.patient = null; p.contact = null; p.slot = null; drawPanel(); return document.getElementById('agSearch')?.focus(); }
@@ -254,9 +385,10 @@
       if (result.error) return finish(result);
       if (p.after) appointments.find(a => a.id === p.after).nextAppointment = result.appointment.id;
       if (state.view === 'agenda') state.agendaDay = p.slot.date;
-      const label = `${shortDay(p.slot.date)} ${p.slot.time}`;
-      ag.panel = null;
-      return finish({}, `Cita reservada · ${label}`);
+      const c = contactOf(pid);
+      if (c) say(c, 'sys', `Cita reservada · ${dayOf(p.slot.date, { weekday: 'long', day: 'numeric', month: 'long' })} · ${p.slot.time}`);
+      ag.panel = { kind: 'done', id: result.appointment.id };
+      return finish({});
     }
   }
   document.addEventListener('click', e => { const el = e.target.closest('[data-ag]'); if (!el) return; e.preventDefault(); dispatch(el.dataset.ag, el.dataset.val || ''); });
@@ -271,6 +403,12 @@
   });
   document.addEventListener('input', e => {
     const el = e.target, p = ag.panel;
+    if (el.id === 'inDraft') {
+      (contactById(ag.contact) || inbox[0]).draft = el.value;
+      const send = document.querySelector('.in-field .btn');
+      if (send) send.disabled = !el.value.trim();
+      return;
+    }
     if (!p) return;
     if (el.id === 'agSearch') { p.query = el.value; document.getElementById('agResults').innerHTML = results(p.query); }
     if (el.id === 'agContactName') p.contact.name = el.value;
@@ -291,14 +429,25 @@
     openBook({ patient: opts.service || state.view === 'detalle' ? state.patient : null, serviceId: opts.service, date: fromSlot ? opts.date : undefined, time: fromSlot ? opts.time : undefined });
   };
   detailDialog = function (a) { closeModal(); openAppt(a.id); };
-  views.agenda = agendaView;
-  views.salidas = checkoutView;
+  const STORY = ['contactos', 'agenda', 'salidas', 'seguimiento'];
+  Object.assign(views, { contactos: contactsView, agenda: agendaView, salidas: checkoutView, seguimiento: followView });
+  jNavItems.unshift(['contactos', 'Contactos', 'bell'], ['agenda', 'Agenda', 'calendar'], ['salidas', 'Salidas', 'wallet'], ['seguimiento', 'Seguimiento', 'heart'], ['pacientes', 'Pacientes', 'users']);
+  roleScope.Recepción = [...STORY, 'pacientes']; // las pantallas anteriores siguen disponibles en el perfil Administrador
+  roleScope.Administrador.push('contactos', 'seguimiento');
   const baseRender = render;
   render = function () {
     P360.sync();
+    if (!pro.active && userNow().role === 'Recepción' && !roleScope.Recepción.includes(state.view) && state.view !== 'detalle') state.view = 'contactos';
+    if (state.view !== 'salidas') ag.flash = null;
     baseRender();
-    const pending = P360.checkoutQueue().length, nav = document.querySelector('#nav .nav-btn[data-nav="salidas"]');
-    if (nav && pending) nav.insertAdjacentHTML('beforeend', `<em>${pending}</em>`);
+    if (STORY.includes(state.view)) document.querySelector('#content .u-context')?.remove(); // la guía del recorrido anterior no hace falta aquí
+    if (userNow().role === 'Recepción') document.querySelector('#nav .d-clinic-access')?.remove(); // recepción no usa el acceso clínico
+    document.querySelector('#nav .p-central-entry')?.remove(); // el acceso al espacio profesional es el botón de la barra superior
+    const badge = (view, count) => { const nav = document.querySelector(`#nav .nav-btn[data-nav="${view}"]`); if (nav && count) nav.insertAdjacentHTML('beforeend', `<em>${count}</em>`); };
+    badge('salidas', P360.checkoutQueue().length);
+    badge('contactos', inbox.filter(c => !c.replied).length);
+    const chat = document.querySelector('.in-messages');
+    if (chat) chat.scrollTop = chat.scrollHeight;
     drawPanel();
   };
   render();

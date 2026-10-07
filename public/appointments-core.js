@@ -6,12 +6,13 @@
    sobre él las dimensiones separadas y registra en la línea de tiempo los cambios que hagan los módulos
    anteriores (ver sync). Las tres entidades siguen separadas: paciente, cita y tratamiento. */
 const P360 = (() => {
-  const TODAY = '2026-10-05';
+  let TODAY = '2026-10-05'; // cambia cuando la simulación adelanta el reloj (travelTo)
   const CHECKOUT_TASK = 'Coordinar la salida y la próxima cita'; // tarea que recibe recepción cuando el profesional finaliza
 
   // ── Reloj único. Hoy arranca a las 08:24 y avanza en tiempo real; con servidor se reemplaza por la hora real
-  const bootReal = Date.now(), bootMinute = 8 * 60 + 24, lastMinute = 18 * 60;
-  const nowMinute = () => Math.min(bootMinute + Math.floor((Date.now() - bootReal) / 60000), lastMinute);
+  let clockReal = Date.now(), clockMinute = 8 * 60 + 24;
+  const lastMinute = 18 * 60;
+  const nowMinute = () => Math.min(clockMinute + Math.floor((Date.now() - clockReal) / 60000), lastMinute);
   const nowTime = () => hhmm(nowMinute());
   const stamp = (time = nowTime()) => `${TODAY}T${time}`;
   const actor = () => (pro.active ? proName : userNow().name);
@@ -28,6 +29,7 @@ const P360 = (() => {
   // ── Preparación: requisitos según el servicio. Una cita sin requisitos no muestra preparación
   const prepLabels = { historia: 'Historia médica actualizada', consentimiento: 'Consentimiento informado', panoramica: 'Radiografía panorámica', fotos: 'Fotografías iniciales', modelos: 'Modelos de estudio' };
   const prepRules = [
+    [/valoraci/i, []],
     [/implant|cirug/i, ['historia', 'consentimiento', 'panoramica']],
     [/dise[ñn]o|est[ée]tic/i, ['consentimiento', 'fotos']],
     [/rehabilit/i, ['historia', 'modelos']]
@@ -40,11 +42,16 @@ const P360 = (() => {
   const followUpRules = [
     [/cirug|extracc|exodoncia/i, [{ days: 1, title: 'Seguimiento 24 horas tras el procedimiento' }, { days: 8, title: 'Control posoperatorio', control: true }]],
     [/implant/i, [{ days: 1, title: 'Seguimiento 24 horas' }, { days: 15, title: 'Control de implante', control: true }]],
-    [/valoraci/i, [{ days: 2, title: 'Seguimiento de la valoración', owner: 'Andrés Salazar' }]],
+    [/valoraci/i, [{ days: 1, title: 'Contactar para conocer su decisión', decision: true }]],
     [/dise[ñn]o|est[ée]tic|blanque/i, [{ days: 15, title: 'Control de diseño de sonrisa', control: true }]]
   ];
   const followUpsFor = a => (followUpRules.find(([rule]) => rule.test(a.type)) || [null, []])[1];
   const nextControl = a => followUpsFor(a).find(step => step.control) || null;
+
+  // ── Catálogo de tratamientos (maqueta). El valor estimado de un tratamiento recomendado se lee de aquí: la consulta
+  //    clínica solo define el tratamiento y recepción ve el valor en Salidas. No es un catálogo configurable
+  const treatmentCatalog = { 'diseño de sonrisa': 7200000 };
+  const catalogValue = title => treatmentCatalog[String(title).trim().toLowerCase()] ?? null;
 
   // ── Precio de referencia para citas sin servicio de catálogo
   const priceRules = [[/cirug/i, 650000], [/implant/i, 320000], [/limpieza/i, 220000], [/dise[ñn]o|est[ée]tic/i, 250000], [/ortodoncia/i, 120000]];
@@ -99,6 +106,7 @@ const P360 = (() => {
     };
   }
   const isLate = a => a.date < TODAY || (a.date === TODAY && minutes(a.time) + 15 <= nowMinute());
+  const isAhead = a => a.date > TODAY || (a.date === TODAY && minutes(a.time) - 5 > nowMinute());
   const waitMinutes = a => Math.max(0, nowMinute() - minutes(eventTime(a, 'llegada') || nowTime()));
 
   // Macroestado visible: una palabra para la agenda y una frase para el detalle
@@ -113,7 +121,7 @@ const P360 = (() => {
     if (s.booking === 'cambio_solicitado') return 'cambio';
     return s.confirmation === 'confirmada' ? 'confirmada' : 'por_confirmar';
   }
-  const phaseLabels = { cancelada: 'Cancelada', no_asistio: 'No asistió', completa: 'Completa', salida: 'En salida', en_atencion: 'En atención', llego: 'Llegó', cambio: 'Cambio solicitado', confirmada: 'Confirmada', por_confirmar: 'Por confirmar' };
+  const phaseLabels = { cancelada: 'Cancelada', no_asistio: 'No asistió', completa: 'Completa', salida: 'En salida', en_atencion: 'En atención', llego: 'En clínica', cambio: 'Cambio solicitado', confirmada: 'Confirmada', por_confirmar: 'Por confirmar' };
   function describe(a) {
     const s = stateOf(a), p = phase(a);
     if (p === 'cancelada') { const reason = lastEvent(a, 'cancelacion')?.reason; return 'Cita cancelada' + (reason ? ' · ' + reason : ''); }
@@ -139,20 +147,21 @@ const P360 = (() => {
     if (today) return { key: 'arrive', label: 'Paciente llegó' };
     if (s.confirmation !== 'confirmada') return { key: 'confirm', label: 'Confirmar paciente' };
     if (s.preparation === 'pendiente') return { key: 'prep', label: 'Completar preparación' };
-    return null;
+    return { key: 'travel', label: 'Adelantar a la hora de la cita', quiet: true }; // nada pendiente hasta ese día
   }
   function otherActions(a) {
     const s = stateOf(a), main = nextAction(a)?.key, list = [];
     const add = (key, label) => { if (key !== main) list.push({ key, label }); };
     if (s.booking !== 'cancelada' && s.visit === 'pendiente') {
       if (s.confirmation !== 'confirmada') add('confirm', 'Confirmar');
-      if (s.confirmation === 'pendiente' && a.date > TODAY) add('noresponse', 'Sin respuesta');
       add('reschedule', 'Reprogramar');
       if (isLate(a)) add('noshow', 'No asistió');
       add('cancel', 'Cancelar');
+      if (isAhead(a)) add('travel', 'Adelantar a la hora de la cita');
     }
+    if (['llego', 'en_atencion'].includes(s.visit) && a.professional === proName) add('aspro', `Ver como ${a.professional.startsWith('Dra.') ? 'la' : 'el'} ${a.professional}`);
     if (s.checkout === 'cerrada') add('next', 'Agendar próxima cita');
-    add('patient', 'Abrir paciente');
+    add('patient', 'Ver paciente');
     return list;
   }
   function metrics(a) {
@@ -195,18 +204,18 @@ const P360 = (() => {
     }
     return found;
   }
-  // Primeros horarios sugeridos: hasta tres por día, repartidos, empezando hoy
-  function suggest(query, total = 6) {
+  // Primeros horarios sugeridos: por día, el más cercano a la mañana, al mediodía y a la tarde
+  function suggest(query, total = 7) {
     const picks = [];
     for (let offset = 0; offset < 28 && picks.length < total; offset++) {
-      let last = -Infinity, perDay = 0;
-      for (const slot of slots({ ...query, date: addDays(TODAY, offset), step: 30 })) {
-        if (minutes(slot.time) - last < 120) continue;
-        picks.push(slot); last = minutes(slot.time);
-        if (++perDay === 3 || picks.length === total) break;
+      const free = slots({ ...query, date: addDays(TODAY, offset), step: 30 }), day = [];
+      for (const target of [540, 690, 900]) {
+        const best = free.filter(s => !day.includes(s)).sort((a, b) => Math.abs(minutes(a.time) - target) - Math.abs(minutes(b.time) - target))[0];
+        if (best) day.push(best);
       }
+      picks.push(...day.sort((a, b) => a.time.localeCompare(b.time)));
     }
-    return picks;
+    return picks.slice(0, total);
   }
   // Devuelve el motivo por el que un horario no sirve, o '' si está libre
   function check(candidate, ignoreId = null) {
@@ -221,8 +230,8 @@ const P360 = (() => {
 
   // ── Comandos. Cada uno valida, cambia el estado, deja su evento y devuelve { error } si no pudo
   const queueMessages = a => { jCancelMessages(a); jQueue(a); };
-  function createContact({ name, phone, site }) {
-    const record = { id: nextId(patients), name: name.trim(), age: '—', site, source: 'Por registrar', campaign: 'Sin campaña', phone: phone.trim(), email: 'Sin correo', status: 'Nueva', consent: false, created: TODAY, last: TODAY, nextAction: 'Completar datos del paciente', attribution: { residence: 'Por registrar', evidence: 'Declarado por paciente', firstTouch: TODAY } };
+  function createContact({ name, phone, site, source = 'Por registrar', campaign = 'Sin campaña', interest = '', age = '—' }) {
+    const record = { id: nextId(patients), name: name.trim(), age, site, source, campaign, interest, phone: phone.trim(), email: 'Sin correo', status: 'Nueva', consent: true, created: TODAY, last: TODAY, nextAction: 'Completar datos del paciente', attribution: { residence: 'Por registrar', evidence: 'Declarado por paciente', firstTouch: TODAY } };
     patients.push(record);
     return record;
   }
@@ -246,8 +255,10 @@ const P360 = (() => {
   function confirm(a) {
     if (stateOf(a).visit !== 'pendiente' || a.status === 'Cancelada') return { error: 'Esta cita ya no admite confirmación.' };
     a.status = 'Confirmada'; a.noResponse = false;
-    log(a, 'confirmacion');
-    return {};
+    const when = a.date === TODAY ? 'hoy' : a.date === addDays(TODAY, 1) ? 'mañana' : 'el ' + new Date(a.date + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+    a.confirmMessage = `Hola ${patient(a.patient).name.split(' ')[0]}, te esperamos ${when} a las ${a.time} para tu ${a.type.toLowerCase()} con ${a.professional.startsWith('Dra.') ? 'la' : 'el'} ${a.professional}.`;
+    log(a, 'confirmacion', { message: a.confirmMessage });
+    return { message: a.confirmMessage };
   }
   function noResponse(a) {
     a.noResponse = true;
@@ -305,15 +316,37 @@ const P360 = (() => {
     logOperation(`Cobro de ${fmt(amount)} · ${patient(a.patient).name}`);
     return {};
   }
+  // Continuidad: una salida no termina sin definir qué ocurre después. Aquí, un seguimiento para el día siguiente
+  function scheduleFollowUp(a) {
+    if (a.followUp) return { task: a.followUp };
+    const title = a.plan ? `Contactar para conocer su decisión sobre ${a.plan.title.toLowerCase()}` : 'Contactar para dar seguimiento a la visita';
+    const task = { id: nextId(careTasks), patient: a.patient, visit: a.id, title, date: addDays(a.date, 1), time: '10:00', owner: 'Laura Martínez', done: false, auto: true };
+    careTasks.push(task);
+    a.followUp = task;
+    log(a, 'seguimiento', { title });
+    logOperation(patient(a.patient).name + ': seguimiento programado');
+    return { task };
+  }
   function closeCheckout(a) {
     if (flowStep(a) !== 3) return { error: 'La visita debe estar en salida.' };
     visitFlow[a.id] = 4; a.status = 'Atendida';
     log(a, 'salida');
     careTasks.filter(t => t.visit === a.id && !t.done && t.title === CHECKOUT_TASK).forEach(t => { t.done = true; t.result = 'Salida completada'; }); // la tarea de salida se cierra sola
-    followUpsFor(a).filter(step => !step.control).forEach(step => careTasks.push({ id: nextId(careTasks), patient: a.patient, visit: a.id, title: step.title, date: addDays(a.date, step.days), owner: step.owner || 'Laura Martínez', done: false }));
+    const created = followUpsFor(a).filter(step => !step.control && !(step.decision && (a.nextAppointment || a.followUp))).map(step => ({ id: 0, patient: a.patient, visit: a.id, title: step.decision && a.plan ? `Contactar para conocer su decisión sobre el ${a.plan.title.toLowerCase()}` : step.title, date: addDays(a.date, step.days), time: '10:00', owner: step.owner || 'Laura Martínez', done: false, auto: true }));
+    created.forEach(task => { task.id = nextId(careTasks); careTasks.push(task); });
     jFollow(a);
     logOperation(patient(a.patient).name + ': salida completada');
-    return {};
+    return { followUps: created };
+  }
+
+  // ── Simulación: adelanta el reloj a cinco minutos antes de una cita. Lo anterior a ese momento queda atendido
+  function travelTo(a) {
+    TODAY = a.date; clockReal = Date.now(); clockMinute = Math.max(480, minutes(a.time) - 5);
+    pro.date = TODAY; // el espacio profesional trabaja siempre sobre el día del escenario
+    appointments.filter(x => x.id !== a.id && holds(x) && flowStep(x) < 4 && (x.date < TODAY || (x.date === TODAY && interval(x)[1] <= clockMinute)))
+      .forEach(x => { visitFlow[x.id] = 4; x.status = 'Atendida'; x.seen = snapshot(x); });
+    careTasks.filter(t => t.auto && !t.done && t.date < TODAY).forEach(t => { t.done = true; }); // los seguimientos de días anteriores ya se hicieron
+    Object.assign(state, { agendaDay: TODAY, calendarAnchor: TODAY, flowDate: TODAY });
   }
 
   // ── Datos de ejemplo de la jornada: las citas del profesional y las de sus colegas, en distintos momentos
@@ -347,6 +380,15 @@ const P360 = (() => {
     const dropped = add(6, '16:00', 3, '', sara, 'El Tesoro', 'Consultorio 3', 'Cancelada');
     past(dropped, 'cancelacion', '08:05', { reason: 'El paciente no puede asistir' });
 
+    // Mañana: la agenda ya tiene movimiento y deja libres las 09:00, 11:30 y 15:00 de la Dra. Daniela
+    const tomorrow = addDays(TODAY, 1), early = appointments.find(a => a.proDemo && a.date === tomorrow);
+    if (early) early.time = '08:00';
+    add(8, '10:00', 3, '', sara, 'El Tesoro', 'Consultorio 3', 'Confirmada', { date: tomorrow });
+    add(5, '15:00', 1, '', sara, 'El Tesoro', 'Consultorio 3', 'Reservada', { date: tomorrow });
+    // Seguimientos ya programados, para que la lista no empiece vacía
+    careTasks.push({ id: nextId(careTasks), patient: 6, visit: dropped.id, title: 'Reagendar la limpieza cancelada', date: TODAY, time: '11:00', owner: 'Laura Martínez', done: false, auto: true });
+    careTasks.push({ id: nextId(careTasks), patient: 4, title: 'Recordar el control de rehabilitación del miércoles', date: tomorrow, time: '09:00', owner: 'Laura Martínez', done: false, auto: true });
+
     // Citas de la Dra. Daniela: la primera ya llegó; cirugía con una radiografía pendiente
     const mine = appointments.filter(a => a.proDemo && a.date === TODAY);
     if (mine[0]) past(mine[0], 'llegada', '08:21');
@@ -354,14 +396,13 @@ const P360 = (() => {
   }
 
   seed();
-  roleScope.Recepción.push('salidas', 'pacientes'); // recepción recibe la cola de salidas y abre la ficha del paciente
   Object.assign(state, { agendaDay: TODAY, calendarAnchor: TODAY, flowDate: TODAY });
 
   return {
-    today: TODAY, checkoutTask: CHECKOUT_TASK, nowMinute, nowTime, rooms, hours, workIntervals, prepLabels, phaseLabels,
+    get today() { return TODAY; }, travelTo, isAhead, catalogValue, checkoutTask: CHECKOUT_TASK, nowMinute, nowTime, rooms, hours, workIntervals, prepLabels, phaseLabels,
     stateOf, phase, describe, nextAction, otherActions, metrics, financeOf, serviceOf, eventTime, isLate,
     prepItems, prepPending, followUpsFor, nextControl, slots, suggest, check, sync,
-    createContact, book, confirm, noResponse, reschedule, cancel, arrive, noShow, togglePrep, charge, closeCheckout,
+    createContact, scheduleFollowUp, book, confirm, noResponse, reschedule, cancel, arrive, noShow, togglePrep, charge, closeCheckout,
     checkoutQueue: () => appointments.filter(a => flowStep(a) === 3 && a.status !== 'Cancelada').sort((a, b) => (eventTime(a, 'fin_atencion') || a.time).localeCompare(eventTime(b, 'fin_atencion') || b.time))
   };
 })();

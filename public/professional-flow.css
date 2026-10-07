@@ -159,3 +159,78 @@ body:not(.professional-mode) #uxPush { display: none; }
   .ux-facts > div { grid-template-columns: 116px minmax(0, 1fr); }
   .ux-note-add { flex-direction: column; align-items: stretch; }
 }
+
+/* Valoración: motivo de consulta, diagnóstico y plan propuesto junto a la evolución */
+.ux-assess { display: grid; gap: 12px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+#professionalApp .ux-reason { margin: 0; padding: 12px 14px; border-radius: 10px; background: #f8fbfa; font-size: 15px; }
+.ux-reason strong { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+.ux-assess label { display: grid; gap: 6px; font-size: 14px; font-weight: 700; }
+.ux-assess input { font: inherit; font-weight: 400; padding: 11px 12px; border: 1px solid #cbdcda; border-radius: 8px; color: #274d52; background: #fff; min-width: 0; width: 100%; }
+
+/* Mi día: las cifras son contexto, no protagonistas. Una línea discreta sobre el paciente que requiere atención */
+#professionalApp .p-stats { display: flex; flex-wrap: wrap; gap: 2px 22px; margin: -6px 0 18px; }
+#professionalApp .p-stat { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 0; border: 0; border-radius: 0; background: none; box-shadow: none; color: var(--muted); text-align: left; cursor: pointer; }
+#professionalApp .p-stat strong { display: inline; margin: 0; font-size: 13px; font-weight: 800; color: var(--ink); }
+#professionalApp .p-stat span { font-size: 13px; }
+#professionalApp .p-stat:hover span { text-decoration: underline; }
+
+/* Aviso de llegada: compacto y pasajero */
+.ux-push.is-arrival { align-items: center; padding: 12px 14px; }
+.ux-push.is-arrival .ux-push-icon { width: 34px; height: 34px; border-radius: 10px; }
+.ux-push.is-arrival .ux-push-icon svg { width: 20px; height: 20px; }
+.ux-push.is-arrival .ux-push-body strong { margin-top: 0; font-size: 15px; }
+.ux-push.is-arrival .ux-push-actions { margin-top: 10px; }
+
+/* Consulta de hoy: un encabezado compacto, el motivo y el contexto a la izquierda, la evolución como superficie de trabajo */
+#professionalApp .ux-patient-top { justify-content: flex-start; margin: -10px 0 4px; }
+.ux-patient-top .p-btn { min-height: 34px; padding: 4px 10px 4px 2px; }
+.ux-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 28px; padding: 14px 18px; margin-bottom: 12px; }
+.ux-head-row { display: flex; align-items: center; gap: 14px; }
+.ux-head h2 { font-size: 21px; letter-spacing: -.5px; margin: 0 0 2px; }
+#professionalApp .ux-head p { margin: 0; font-size: 14px; line-height: 1.4; }
+#professionalApp .ux-head .ux-alerts { margin-top: 0; justify-content: flex-end; }
+#professionalApp .p-clinical-tabs { margin-bottom: 10px; padding-bottom: 2px; }
+.ux-consult { display: grid; gap: 22px; }
+.ux-consult-main { display: grid; gap: 22px; align-content: start; }
+#professionalApp .ux-label { display: block; margin-bottom: 8px; font-size: 11.5px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
+#professionalApp .ux-motive { margin: 0; font-size: 19px; font-weight: 700; line-height: 1.38; letter-spacing: -.3px; }
+.ux-bullets { margin: 0; padding-left: 18px; font-size: 15px; line-height: 1.6; }
+.ux-bullets li::marker { color: var(--gold); }
+.ux-consult-main .ux-reception { margin-top: 12px; }
+.ux-today-evo { border: 1px solid #cfe0db; border-radius: 16px; background: #fff; padding: 16px 18px; box-shadow: 0 6px 24px #153e4410; }
+.ux-today-evo.is-idle, .ux-today-evo.is-done { background: #f8fbfa; box-shadow: none; }
+#professionalApp .ux-evo-title { display: block; margin: 0 0 8px; font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+.ux-today-evo textarea { display: block; width: 100%; min-height: 124px; resize: vertical; font: inherit; font-size: 15px; line-height: 1.55; color: #274d52; background: #fff; border: 1px solid #cbdcda; border-radius: 12px; padding: 12px 14px; }
+.ux-today-evo textarea:focus { outline: none; border-color: #8fb9b0; box-shadow: 0 0 0 3px #468f8122; }
+.ux-plan { margin-top: 6px; }
+.ux-plan summary { cursor: pointer; padding: 6px 0; font-size: 13.5px; font-weight: 700; color: var(--muted); }
+.ux-plan-body { display: grid; gap: 14px; padding: 8px 0 2px; }
+#professionalApp .ux-plan-body h4 { margin: 0 0 4px; font-size: 11.5px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); }
+.ux-plan-body ul { margin: 0; padding-left: 18px; font-size: 14.5px; line-height: 1.55; }
+.ux-plan-body li::marker { color: var(--gold); }
+.ux-evo-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.ux-hint { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted); }
+.ux-dot { width: 7px; height: 7px; border-radius: 50%; background: #2f7d70; transition: background .2s; }
+.ux-hint.is-saving .ux-dot { background: var(--gold); }
+.ux-evo-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ux-today-evo .p-error:empty { display: none; }
+#professionalApp .ux-saved { margin: 0 0 10px; font-size: 15px; line-height: 1.55; }
+.ux-today-evo p { margin: 0 0 10px; }
+
+@media (min-width: 1000px) {
+  .ux-consult { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 28px; align-items: start; }
+}
+@media (max-width: 700px) {
+  #professionalApp .ux-patient-top { margin: -8px 0 2px; }
+  .ux-head { padding: 14px; gap: 10px; }
+  .ux-head h2 { font-size: 19px; }
+  #professionalApp .ux-head .ux-alerts { justify-content: flex-start; }
+  .ux-consult, .ux-consult-main { gap: 16px; }
+  #professionalApp .ux-motive { font-size: 17px; }
+  .ux-today-evo { padding: 14px; }
+  .ux-today-evo textarea { min-height: 120px; }
+}
+
+/* Las pestañas de la consulta se deslizan sin mostrar la barra de desplazamiento */
+#professionalApp .p-clinical-tabs { scrollbar-width: none; }
+#professionalApp .p-clinical-tabs::-webkit-scrollbar { display: none; }

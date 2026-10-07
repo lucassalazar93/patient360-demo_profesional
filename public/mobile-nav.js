@@ -2,10 +2,10 @@
    y cierre táctil del menú lateral. Se monta al final y sigue los cambios del menú lateral (#nav) sin tocar sus módulos. */
 (() => {
   // Orden de prioridad para la barra del celular; cada perfil muestra las secciones que tenga disponibles
-  const PRIMARY = ['inicio','agenda','ruta','flujo','pacientes','salidas','comunicaciones','equipo','crm','clinico','vip','finanzas'];
+  const PRIMARY = ['contactos','inicio','agenda','salidas','ruta','flujo','pacientes','comunicaciones','equipo','crm','clinico','vip','finanzas'];
   // "ruta" y "flujo" son el mismo recorrido del paciente en perfiles distintos: se muestra una sola vez
   const GROUP = {ruta:'flujo'};
-  const SHORT = {inicio:'Inicio',ruta:'Flujo',flujo:'Flujo',agenda:'Agenda',pacientes:'Pacientes',salidas:'Salidas',comunicaciones:'WhatsApp',equipo:'Equipo',crm:'Seguimiento',clinico:'Clínico',vip:'VIP',finanzas:'Finanzas'};
+  const SHORT = {contactos:'Contactos',seguimiento:'Seguimiento',inicio:'Inicio',ruta:'Flujo',flujo:'Flujo',agenda:'Agenda',pacientes:'Pacientes',salidas:'Salidas',comunicaciones:'WhatsApp',equipo:'Equipo',crm:'Seguimiento',clinico:'Clínico',vip:'VIP',finanzas:'Finanzas'};
   const nav = document.getElementById('nav'), sidebar = document.getElementById('sidebar'), menuBtn = document.getElementById('menuBtn');
   if (!nav || !sidebar || !menuBtn) return;
 
